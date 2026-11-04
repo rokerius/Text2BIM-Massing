@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/evgmaslov/massing-generation",
+  "commit": "607ff1fcf80477787409522d93e18e42ac1436cf",
+  "files": {
+    "src/polygons_to_shapely_converter.py": {
+      "git_blob": "f175b6fe58315b084b79d65748b04f358102ae29",
+      "sha256": "4ffae200e268393c2c455adf5da9dd7e3c1720bf3ba94268f508aadd9cfd93cb"
+    },
+    "src/shapely_to_polygons_converter.py": {
+      "git_blob": "24943b1a0ecf806f4a5fd55ddd70b59a95459006",
+      "sha256": "172fe1fe8e10df0b79b01fa4e9e5882723befc24875cd8b7f2967990658770d1"
+    }
+  }
+}

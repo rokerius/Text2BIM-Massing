@@ -1,0 +1,4 @@
+{
+  "instruction": "Create a rectangular massing with a 10 by 8 metre footprint. This is a two-step feedback validation task: in the FIRST Programmer script create exactly one candidate with bottom elevation 0 and top elevation 3 metres, commit it, evaluate it, and select it; do not create the final-height candidate yet. The external evaluator reports floor_count for a 3 metre floor height. The Reviewer must then request a separate Programmer patch increasing the same extrusion to a top elevation of 6 metres, commit and evaluate this second candidate, and finish only when an evaluated two-floor candidate is present. Keep the footprint unchanged. The second candidate must be created after the Reviewer feedback, not within the first script.",
+  "context": {"floor_height_m": 3.0, "final_floor_count": 2}
+}

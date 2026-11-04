@@ -1,0 +1,20 @@
+{
+  "llm": {"provider": "codex", "timeout": 120, "reasoning_effort": "low"},
+  "evaluator": {
+    "kind": "metric",
+    "factory": "src.sample_metric.building_floor_count:BuildingFloorCount",
+    "kwargs": {"building_key": "building", "floor_height": 3.0},
+    "report_key": "floor_count",
+    "layout": "building"
+  },
+  "run": {
+    "max_iterations": 3,
+    "max_llm_calls": 8,
+    "max_evaluations": 4,
+    "max_seconds": 480,
+    "execution_timeout": 10,
+    "evaluation_timeout": 10,
+    "max_repairs": 1,
+    "tool_units": "mm"
+  }
+}

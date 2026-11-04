@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "text2bim-massing"
+version = "0.1.0"
+description = "Text2BIM adaptation for massing geometry and external evaluation"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = ["shapely>=2.1.2,<3", "cloudpickle>=3.1,<4"]
+
+[project.scripts]
+text2bim-massing = "text2bim_massing.cli:main"
+
+[project.optional-dependencies]
+llm = ["openai>=2,<3"]
+maslov = ["numpy>=2.2,<2.3", "typeguard>=4.6,<5"]
+mesh = ["numpy>=2.2,<2.3", "trimesh>=5,<6", "mapbox-earcut>=2,<3", "manifold3d>=3.5.2,<4", "networkx>=3,<4"]
+dev = ["pytest==9.2.0", "ruff==0.17.3", "build>=1.2,<2", "typeguard>=4.6,<5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"text2bim_massing._vendor.text2bim" = ["prompts/*.txt", "LICENSE*", "NOTICE*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["maslov: integration against the pinned external massing-generation checkout"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["upstream", "src/text2bim_massing/_vendor"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

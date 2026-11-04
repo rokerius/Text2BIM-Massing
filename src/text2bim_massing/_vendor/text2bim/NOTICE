@@ -1,0 +1,6 @@
+Text2BIM: Copyright (c) 2024 dcy0577, MIT.
+python_interpreter.py: Copyright 2023 The HuggingFace Inc. team, Apache-2.0.
+Local change: SyntaxError raises InterpretorError instead of returning success.
+Original versions and provenance: upstream/text2bim/manifest.json.
+agents.py adapts MyAgent and plan_designer with injected transport and transactional execution.
+Complete adaptations are documented in docs/source-map.md and docs/text2bim-adaptation.md.
