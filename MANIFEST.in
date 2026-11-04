@@ -1,5 +1,7 @@
 include Text2BIM-Massing-implementation-plan.md
 include THIRD_PARTY_NOTICES.md
+include CONTRIBUTING.md
+include CHANGELOG.md
 include requirements-dev.txt
 include Dockerfile
 include .dockerignore
@@ -8,8 +10,9 @@ recursive-include docs *.json
 recursive-include tools *.py
 recursive-include integrations *.py *.json *.md
 include .gitignore
+include .gitattributes
 include .python-version
-recursive-include .github *.yml
+recursive-include .github *.yml *.md
 recursive-include examples *.py
 recursive-include examples *.json
 recursive-include tests *.py

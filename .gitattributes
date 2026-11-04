@@ -1,0 +1,8 @@
+# Normalize project text; preserve pinned and copied source bytes.
+* text=auto eol=lf
+/upstream/** -text -eol linguist-vendored=true
+/src/text2bim_massing/_vendor/** -text -eol linguist-vendored=true
+
+# Generated reports remain tracked and verified by the adaptation audit.
+/docs/text2bim-diff.md linguist-generated=true
+/docs/adaptation-lock.json linguist-generated=true

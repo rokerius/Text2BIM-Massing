@@ -1,5 +1,9 @@
 # Карта переноса
 
+Текущие возможности — в [status.md](status.md), устройство процессов — в
+[architecture.md](architecture.md), подтверждение проверок — в
+[validation.md](validation.md). Эта карта отвечает за происхождение кода.
+
 Text2BIM: `b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc`.
 Маслов: `607ff1fcf80477787409522d93e18e42ac1436cf`.
 
@@ -76,7 +80,7 @@ CLI с сохранённой ChatGPT авторизацией. Он получ�
 `config.py`, `cli.py`, `__main__.py`, публичный `generate` и JSON-примеры — новый
 код standalone runner. `provenance.json` записывает source commits и транспорт;
 default-модель CLI обозначается явно как незафиксированная. CLI дополнительно
-сохраняет входной runner config. Внешний репозиторий не изменяется.
+сохраняет входной runner config. Сам CLI не изменяет внешний checkout.
 
 
 ## Полный реестр и внешний эксперимент
