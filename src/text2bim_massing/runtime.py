@@ -124,12 +124,11 @@ class BudgetedLLM:
             }
         )
         for call in response.tool_calls:
-            function = available_functions.get(call.name)
-            if function is None:
-                result = {"error": f"Unavailable function: {call.name}"}
-            else:
-                arguments = json.loads(call.arguments)
-                result = function(**arguments)
+            if call.name not in available_functions:
+                return self.generate_one(prompt, stop)
+            function_to_call = available_functions[call.name]
+            function_args = json.loads(call.arguments)
+            result = function_to_call(function_args.get("query"))
             messages.append({"tool_call_id": call.id, "role": "tool", "content": str(result)})
         final = self.complete(messages, stop=stop)
         if final.tool_calls:

@@ -79,17 +79,18 @@ class CodexCLIClient:
                 "tool_calls": {
                     "type": "array",
                     "items": call_schema,
-                    "maxItems": 1 if names else 0,
                 },
             },
             "required": ["text", "tool_calls"],
         }
+        if not names:
+            schema["properties"]["tool_calls"]["maxItems"] = 0
         prompt = (
             "Act only as the language-model completion transport for the conversation below. "
             "Do not inspect files, run shell commands, browse, or use Codex tools. "
             "Return the requested assistant response inside the schema's text field, preserving "
             "all Python/JSON code fences. If external functions are offered, you may instead "
-            "request one by filling tool_calls with its name and JSON-encoded arguments. "
+            "request them by filling tool_calls with their names and JSON-encoded arguments. "
             "Otherwise return an empty tool_calls array. Follow the final conversation instruction.\n"
             + json.dumps(
                 {"messages": messages, "external_functions": tools or []}, ensure_ascii=False

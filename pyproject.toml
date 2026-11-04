@@ -14,7 +14,7 @@ dependencies = ["shapely>=2.1.2,<3", "cloudpickle>=3.1,<4"]
 text2bim-massing = "text2bim_massing.cli:main"
 
 [project.optional-dependencies]
-llm = ["openai>=2,<3"]
+llm = ["openai==1.82.0"]
 maslov = ["numpy>=2.2,<2.3", "typeguard>=4.6,<5"]
 mesh = ["numpy>=2.2,<2.3", "trimesh>=5,<6", "mapbox-earcut>=2,<3", "manifold3d>=3.5.2,<4", "networkx>=3,<4"]
 dev = ["pytest==9.2.0", "ruff==0.17.3", "build>=1.2,<2", "typeguard>=4.6,<5"]

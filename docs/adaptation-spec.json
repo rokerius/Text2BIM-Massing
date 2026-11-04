@@ -1,0 +1,1494 @@
+{
+  "source_commit": "b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc",
+  "source_tree": "f157df288248f101150489b0f3abbece47f17fb9",
+  "method_changes": [
+    {
+      "id": "SOURCES",
+      "title": "Фиксация полного источника",
+      "reason": "Полный tree исходного commit сохранён; 11 выбранных файлов скопированы побайтово. Остальные файлы явно исключены по назначению.",
+      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе.",
+      "verification": "Git blob SHA/SHA-256, полный file/declaration inventory, tests/test_sources.py и audit --check."
+    },
+    {
+      "id": "GEOMETRY",
+      "title": "Замена Vectorworks геометрией массингов",
+      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера Маслова сохраняют тела методов. Сцена и инструменты написаны заново.",
+      "method_effect": "Нет стен, окон, дверей, слоёв, IFC или vs.py. Добавлены экструзии, отверстия, компоненты и стабильные ID. Проверка >=3 вершин, finite/valid geometry, положительной высоты и canonical ring order отличаются от GUI; перевода произвольной BIM-сцены нет.",
+      "verification": "Дифф конвертеров, геометрические тесты, исходный MassingMeshCompiler."
+    },
+    {
+      "id": "TOOLS",
+      "title": "API инструментов и единицы",
+      "reason": "Сохранены общие имена инструментов, индексация вершин с нуля, UUID и возвраты move/rotate; layer_uuid удалён. Добавлены профиль, экструзия, редактирование, чтение и экспорт.",
+      "method_effect": "Tool units mm по умолчанию в RunConfig, m во внешнем формате; m разрешён явно. Move принимает defaults/списки, rotate расширен на список, profiles независимы от solids. Канонизация может менять порядок вершин. FindSelect и GUI selection не переносятся.",
+      "verification": "tests/test_tools_interpreter.py, test_geometry_scene.py; точная карта API в tools.py."
+    },
+    {
+      "id": "INTERPRETER",
+      "title": "Исправление SyntaxError",
+      "reason": "Исходный интерпретатор сохранён целиком; ast.parse SyntaxError теперь выбрасывает InterpretorError вместо (None,state).",
+      "method_effect": "Устраняет ложный успех. Остальные исходные ветви, включая fuzzy lookup имён/ключей, не исправлялись.",
+      "verification": "Точный full-file diff и регрессия SyntaxError."
+    },
+    {
+      "id": "EXECUTION",
+      "title": "Ограниченное исполнение и состояние",
+      "reason": "Отдельный процесс с тайм-аутом не может надёжно вернуть промежуточное состояние при принудительном завершении. Сцена и variables принимаются вместе только после успеха попытки.",
+      "method_effect": "Это инженерный выбор, более строгий, чем частичное исполнение Text2BIM: все code blocks одного ответа объединяются; no-code считается ошибкой; весь неуспешный script откатывается. Разрешены только JSON-кодируемые data, math aliases, ограниченные builtins/imports/AST. Функции, classes, async, private access запрещены. Это не OS sandbox.",
+      "verification": "Тайм-аут, размеры code/output/state, rollback сцены и mutable variables, сохранение math/tuple/UUID; tests/test_execution.py."
+    },
+    {
+      "id": "AGENTS",
+      "title": "Перенос ролей и исправлений",
+      "reason": "MyAgent больше не наследует HF Agent; tool descriptions, transport, executor и log инъецируются. Prompt substitutions и clean_code_for_chat_extend сохранены.",
+      "method_effect": "Enhancer→Architect по запросу→Programmer, Reviewer→patch. Recursive repair заменён ограниченным циклом; default 2 исправления = исходным 3 попыткам. Repair-инструкция изменена из-за rollback; prompt/history repair накапливается. Удалены unused return_code/remote/is_reviewing/kwargs и documentation_retrieval branch.",
+      "verification": "Role/call ordering, no-code/SyntaxError repair, source fragment diffs, tests/test_workflow.py."
+    },
+    {
+      "id": "PROMPTS",
+      "title": "Адаптация четырёх промптов",
+      "reason": "Оригинальные ресурсы не редактируются. Runtime заменяет Vectorworks, исправляет plan_desinger, описывает supported tools/rollback/snapshots.",
+      "method_effect": "Architect BIM checklist и wall/door example заменены массингами; исходные framing, rationality, few-shot format и task suffix сохранены. В пример явно добавлен floor_height во вход пользователя. Reviewer выдаёт JSON decision/guidance, а не свободный текст; единицы m изменяются только по конфигурации.",
+      "verification": "Точные diff всех четырёх промптов для mm и m; prompts.json каждого запуска."
+    },
+    {
+      "id": "LLM",
+      "title": "Один конфигурируемый клиент",
+      "reason": "Из четырёх провайдеров исходника подключён один OpenAI Chat Completions SDK той же версии 1.82.0; clients и budgets вынесены отдельно.",
+      "method_effect": "Исходные model defaults и всегда истинное o1/o4 ветвление не сохраняются: model/temperature/reasoning/stop задаются явно; send_stop=False по умолчанию. Автоматические retries внутри generate отключены. Images и остальные providers не переносятся. Native multiple tool calls и original unknown-function fallback сохранены. Неверные/пустые ответы отклоняются.",
+      "verification": "Настоящий SDK с mock HTTP, explicit timeout/usage/errors и multiple Architect/fallback tests."
+    },
+    {
+      "id": "CODEX",
+      "title": "Transport через подписку по запросу пользователя",
+      "reason": "Codex CLI не является исходным OpenAI API эксперимента; отдельный backend использует saved ChatGPT login.",
+      "method_effect": "CLI получает JSON-конверт conversation/functions и JSON Schema response, свои system/developer instructions и reported usage. Native tool calls эмулируются JSON. Stop sequences CLI не реализует. Read-only/ephemeral, без внутренних tools/API-key forwarding. Default model не зафиксирован; для experiment нужен explicit model.",
+      "verification": "Fake CLI protocol/env test, четыре живых задания macOS/Linux; docs/validation.md."
+    },
+    {
+      "id": "ARCHIVE",
+      "title": "Snapshot, оценка и выбор",
+      "reason": "Внешний report относится к immutable snapshot. Archive/commit/evaluate/select обязательны по контракту; arbitrary report не имеет встроенного score.",
+      "method_effect": "Host оценивает current snapshot, если agent не сделал этого; cached report и выбор не переоцениваются. Reviewer может выбрать старый candidate; для patch восстанавливаются его scene и variables. Уже выполненные оценки/архив не откатываются при последующей ошибке script. Нет исходного stop по пустому issue_str или GUI YNDialog. Completed означает решение Reviewer, не физическую валидность.",
+      "verification": "stale report, cache, earlier selection, failed script after evaluation; tests/test_workflow.py."
+    },
+    {
+      "id": "CONTEXT",
+      "title": "Передача внешней задачи",
+      "reason": "Task context добавлен к входу Enhancer и Reviewer. Programmer получает только answer Enhancer, как в run_po_coder_agents.",
+      "method_effect": "Дополнительный обход Enhancer удалён. Patch request expression восстановлено без изменений; добавлено только состояние выбранной scene с ID, необходимое при archive selection.",
+      "verification": "source patch assignment AST equality, test_initial_programmer_receives_the_enhancer_answer_without_a_bypass."
+    },
+    {
+      "id": "BUDGETS",
+      "title": "Лимиты и trace",
+      "reason": "GUI-контроль и global state/log paths заменены RunConfig, per-run files, process timeouts и учитываемыми LLM/evaluator attempts.",
+      "method_effect": "Итерации, calls, evals, repairs, время, память Linux и размеры ограничены. Недостающий код не считается успехом. Любая незавершённость возвращает статус/архив; при нехватке бюджета selected может отсутствовать. В cost только фактический usage и заданные пользователем цены, для подписки без цены null.",
+      "verification": "Budget/error/status/partial-result tests; config.json, history.jsonl, provenance.json."
+    },
+    {
+      "id": "EVALUATOR",
+      "title": "Внешние компоненты",
+      "reason": "SampleMetric/SampleProcessor передаются извне через явные layouts; evaluator executes in a separate fresh interpreter.",
+      "method_effect": "Нет Solibri/BCF, GUI или встроенного критерия. Metric приводится к float, processor report keys выбираются конфигом, NaN/non-JSON отклоняются. Cloudpickle применяется только к доверенному evaluator, не к generated code; объекты с несериализуемым состоянием возвращают evaluation_failed.",
+      "verification": "Настоящие metric/processor, timeout/serialization/JSON tests и Linux tests."
+    },
+    {
+      "id": "PACKAGING",
+      "title": "Standalone пакет, зависимости и инфраструктура",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux."
+    }
+  ],
+  "file_groups": [
+    {
+      "change_id": "PACKAGING",
+      "kind": "new-infrastructure",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
+      "paths": [
+        ".dockerignore",
+        ".github/workflows/checks.yml",
+        ".gitignore",
+        ".python-version",
+        "Dockerfile",
+        "MANIFEST.in",
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "Text2BIM-Massing-implementation-plan.md",
+        "examples/codex_maslov.json",
+        "examples/courtyard_task.json",
+        "examples/feedback_task.json",
+        "examples/scene_without_llm.py",
+        "pyproject.toml",
+        "requirements-dev.txt"
+      ]
+    },
+    {
+      "change_id": "SOURCES",
+      "kind": "new-audit-and-documentation",
+      "reason": "Полный tree исходного commit сохранён; 11 выбранных файлов скопированы побайтово. Остальные файлы явно исключены по назначению.",
+      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе.",
+      "verification": "Git blob SHA/SHA-256, полный file/declaration inventory, tests/test_sources.py и audit --check.",
+      "paths": [
+        "docs/adaptation-lock.json",
+        "docs/adaptation-spec.json",
+        "docs/source-map.md",
+        "docs/text2bim-adaptation.md",
+        "docs/text2bim-diff.md",
+        "docs/validation.md",
+        "tools/audit_adaptation.py"
+      ]
+    },
+    {
+      "change_id": "PACKAGING",
+      "kind": "new",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
+      "paths": [
+        "src/text2bim_massing/__init__.py",
+        "src/text2bim_massing/__main__.py",
+        "src/text2bim_massing/cli.py"
+      ]
+    },
+    {
+      "change_id": "EVALUATOR",
+      "kind": "new",
+      "reason": "SampleMetric/SampleProcessor передаются извне через явные layouts; evaluator executes in a separate fresh interpreter.",
+      "method_effect": "Нет Solibri/BCF, GUI или встроенного критерия. Metric приводится к float, processor report keys выбираются конфигом, NaN/non-JSON отклоняются. Cloudpickle применяется только к доверенному evaluator, не к generated code; объекты с несериализуемым состоянием возвращают evaluation_failed.",
+      "verification": "Настоящие metric/processor, timeout/serialization/JSON tests и Linux tests.",
+      "paths": [
+        "src/text2bim_massing/_evaluate_worker.py",
+        "src/text2bim_massing/adapters.py"
+      ]
+    },
+    {
+      "change_id": "PACKAGING",
+      "kind": "new-namespace",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
+      "paths": [
+        "src/text2bim_massing/_vendor/__init__.py",
+        "src/text2bim_massing/_vendor/maslov/__init__.py",
+        "src/text2bim_massing/_vendor/text2bim/__init__.py"
+      ]
+    },
+    {
+      "change_id": "GEOMETRY",
+      "kind": "preserved-methods",
+      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера Маслова сохраняют тела методов. Сцена и инструменты написаны заново.",
+      "method_effect": "Нет стен, окон, дверей, слоёв, IFC или vs.py. Добавлены экструзии, отверстия, компоненты и стабильные ID. Проверка >=3 вершин, finite/valid geometry, положительной высоты и canonical ring order отличаются от GUI; перевода произвольной BIM-сцены нет.",
+      "verification": "Дифф конвертеров, геометрические тесты, исходный MassingMeshCompiler.",
+      "paths": [
+        "src/text2bim_massing/_vendor/maslov/polygons_to_shapely_converter.py",
+        "src/text2bim_massing/_vendor/maslov/shapely_to_polygons_converter.py"
+      ]
+    },
+    {
+      "change_id": "SOURCES",
+      "kind": "license-or-original-prompt",
+      "reason": "Полный tree исходного commit сохранён; 11 выбранных файлов скопированы побайтово. Остальные файлы явно исключены по назначению.",
+      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе.",
+      "verification": "Git blob SHA/SHA-256, полный file/declaration inventory, tests/test_sources.py и audit --check.",
+      "paths": [
+        "src/text2bim_massing/_vendor/text2bim/LICENSE",
+        "src/text2bim_massing/_vendor/text2bim/LICENSE-APACHE-2.0",
+        "src/text2bim_massing/_vendor/text2bim/NOTICE",
+        "src/text2bim_massing/_vendor/text2bim/prompts/checker_chat_prompt_temp.txt",
+        "src/text2bim_massing/_vendor/text2bim/prompts/coder_chat_prompt_temp.txt",
+        "src/text2bim_massing/_vendor/text2bim/prompts/floor_plan_designer_chat_prompt_few_shots.txt",
+        "src/text2bim_massing/_vendor/text2bim/prompts/po_chat_prompt_temp.txt"
+      ]
+    },
+    {
+      "change_id": "AGENTS",
+      "kind": "adapted",
+      "reason": "MyAgent больше не наследует HF Agent; tool descriptions, transport, executor и log инъецируются. Prompt substitutions и clean_code_for_chat_extend сохранены.",
+      "method_effect": "Enhancer→Architect по запросу→Programmer, Reviewer→patch. Recursive repair заменён ограниченным циклом; default 2 исправления = исходным 3 попыткам. Repair-инструкция изменена из-за rollback; prompt/history repair накапливается. Удалены unused return_code/remote/is_reviewing/kwargs и documentation_retrieval branch.",
+      "verification": "Role/call ordering, no-code/SyntaxError repair, source fragment diffs, tests/test_workflow.py.",
+      "paths": [
+        "src/text2bim_massing/_vendor/text2bim/agents.py"
+      ]
+    },
+    {
+      "change_id": "INTERPRETER",
+      "kind": "adapted",
+      "reason": "Исходный интерпретатор сохранён целиком; ast.parse SyntaxError теперь выбрасывает InterpretorError вместо (None,state).",
+      "method_effect": "Устраняет ложный успех. Остальные исходные ветви, включая fuzzy lookup имён/ключей, не исправлялись.",
+      "verification": "Точный full-file diff и регрессия SyntaxError.",
+      "paths": [
+        "src/text2bim_massing/_vendor/text2bim/python_interpreter.py"
+      ]
+    },
+    {
+      "change_id": "AGENTS",
+      "kind": "preserved-functions",
+      "reason": "MyAgent больше не наследует HF Agent; tool descriptions, transport, executor и log инъецируются. Prompt substitutions и clean_code_for_chat_extend сохранены.",
+      "method_effect": "Enhancer→Architect по запросу→Programmer, Reviewer→patch. Recursive repair заменён ограниченным циклом; default 2 исправления = исходным 3 попыткам. Repair-инструкция изменена из-за rollback; prompt/history repair накапливается. Удалены unused return_code/remote/is_reviewing/kwargs и documentation_retrieval branch.",
+      "verification": "Role/call ordering, no-code/SyntaxError repair, source fragment diffs, tests/test_workflow.py.",
+      "paths": [
+        "src/text2bim_massing/_vendor/text2bim/utils.py"
+      ]
+    },
+    {
+      "change_id": "EXECUTION",
+      "kind": "new",
+      "reason": "Отдельный процесс с тайм-аутом не может надёжно вернуть промежуточное состояние при принудительном завершении. Сцена и variables принимаются вместе только после успеха попытки.",
+      "method_effect": "Это инженерный выбор, более строгий, чем частичное исполнение Text2BIM: все code blocks одного ответа объединяются; no-code считается ошибкой; весь неуспешный script откатывается. Разрешены только JSON-кодируемые data, math aliases, ограниченные builtins/imports/AST. Функции, classes, async, private access запрещены. Это не OS sandbox.",
+      "verification": "Тайм-аут, размеры code/output/state, rollback сцены и mutable variables, сохранение math/tuple/UUID; tests/test_execution.py.",
+      "paths": [
+        "src/text2bim_massing/_worker.py",
+        "src/text2bim_massing/execution.py"
+      ]
+    },
+    {
+      "change_id": "ARCHIVE",
+      "kind": "new",
+      "reason": "Внешний report относится к immutable snapshot. Archive/commit/evaluate/select обязательны по контракту; arbitrary report не имеет встроенного score.",
+      "method_effect": "Host оценивает current snapshot, если agent не сделал этого; cached report и выбор не переоцениваются. Reviewer может выбрать старый candidate; для patch восстанавливаются его scene и variables. Уже выполненные оценки/архив не откатываются при последующей ошибке script. Нет исходного stop по пустому issue_str или GUI YNDialog. Completed означает решение Reviewer, не физическую валидность.",
+      "verification": "stale report, cache, earlier selection, failed script after evaluation; tests/test_workflow.py.",
+      "paths": [
+        "src/text2bim_massing/archive.py"
+      ]
+    },
+    {
+      "change_id": "CODEX",
+      "kind": "new",
+      "reason": "Codex CLI не является исходным OpenAI API эксперимента; отдельный backend использует saved ChatGPT login.",
+      "method_effect": "CLI получает JSON-конверт conversation/functions и JSON Schema response, свои system/developer instructions и reported usage. Native tool calls эмулируются JSON. Stop sequences CLI не реализует. Read-only/ephemeral, без внутренних tools/API-key forwarding. Default model не зафиксирован; для experiment нужен explicit model.",
+      "verification": "Fake CLI protocol/env test, четыре живых задания macOS/Linux; docs/validation.md.",
+      "paths": [
+        "src/text2bim_massing/codex_client.py"
+      ]
+    },
+    {
+      "change_id": "BUDGETS",
+      "kind": "new",
+      "reason": "GUI-контроль и global state/log paths заменены RunConfig, per-run files, process timeouts и учитываемыми LLM/evaluator attempts.",
+      "method_effect": "Итерации, calls, evals, repairs, время, память Linux и размеры ограничены. Недостающий код не считается успехом. Любая незавершённость возвращает статус/архив; при нехватке бюджета selected может отсутствовать. В cost только фактический usage и заданные пользователем цены, для подписки без цены null.",
+      "verification": "Budget/error/status/partial-result tests; config.json, history.jsonl, provenance.json.",
+      "paths": [
+        "src/text2bim_massing/config.py",
+        "src/text2bim_massing/runtime.py"
+      ]
+    },
+    {
+      "change_id": "GEOMETRY",
+      "kind": "new",
+      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера Маслова сохраняют тела методов. Сцена и инструменты написаны заново.",
+      "method_effect": "Нет стен, окон, дверей, слоёв, IFC или vs.py. Добавлены экструзии, отверстия, компоненты и стабильные ID. Проверка >=3 вершин, finite/valid geometry, положительной высоты и canonical ring order отличаются от GUI; перевода произвольной BIM-сцены нет.",
+      "verification": "Дифф конвертеров, геометрические тесты, исходный MassingMeshCompiler.",
+      "paths": [
+        "src/text2bim_massing/geometry.py",
+        "src/text2bim_massing/scene.py"
+      ]
+    },
+    {
+      "change_id": "LLM",
+      "kind": "adapted",
+      "reason": "Из четырёх провайдеров исходника подключён один OpenAI Chat Completions SDK той же версии 1.82.0; clients и budgets вынесены отдельно.",
+      "method_effect": "Исходные model defaults и всегда истинное o1/o4 ветвление не сохраняются: model/temperature/reasoning/stop задаются явно; send_stop=False по умолчанию. Автоматические retries внутри generate отключены. Images и остальные providers не переносятся. Native multiple tool calls и original unknown-function fallback сохранены. Неверные/пустые ответы отклоняются.",
+      "verification": "Настоящий SDK с mock HTTP, explicit timeout/usage/errors и multiple Architect/fallback tests.",
+      "paths": [
+        "src/text2bim_massing/llm.py"
+      ]
+    },
+    {
+      "change_id": "PROMPTS",
+      "kind": "adapted",
+      "reason": "Оригинальные ресурсы не редактируются. Runtime заменяет Vectorworks, исправляет plan_desinger, описывает supported tools/rollback/snapshots.",
+      "method_effect": "Architect BIM checklist и wall/door example заменены массингами; исходные framing, rationality, few-shot format и task suffix сохранены. В пример явно добавлен floor_height во вход пользователя. Reviewer выдаёт JSON decision/guidance, а не свободный текст; единицы m изменяются только по конфигурации.",
+      "verification": "Точные diff всех четырёх промптов для mm и m; prompts.json каждого запуска.",
+      "paths": [
+        "src/text2bim_massing/prompts.py"
+      ]
+    },
+    {
+      "change_id": "TOOLS",
+      "kind": "adapted",
+      "reason": "Сохранены общие имена инструментов, индексация вершин с нуля, UUID и возвраты move/rotate; layer_uuid удалён. Добавлены профиль, экструзия, редактирование, чтение и экспорт.",
+      "method_effect": "Tool units mm по умолчанию в RunConfig, m во внешнем формате; m разрешён явно. Move принимает defaults/списки, rotate расширен на список, profiles независимы от solids. Канонизация может менять порядок вершин. FindSelect и GUI selection не переносятся.",
+      "verification": "tests/test_tools_interpreter.py, test_geometry_scene.py; точная карта API в tools.py.",
+      "paths": [
+        "src/text2bim_massing/tools.py"
+      ]
+    },
+    {
+      "change_id": "CONTEXT",
+      "kind": "adapted",
+      "reason": "Task context добавлен к входу Enhancer и Reviewer. Programmer получает только answer Enhancer, как в run_po_coder_agents.",
+      "method_effect": "Дополнительный обход Enhancer удалён. Patch request expression восстановлено без изменений; добавлено только состояние выбранной scene с ID, необходимое при archive selection.",
+      "verification": "source patch assignment AST equality, test_initial_programmer_receives_the_enhancer_answer_without_a_bypass.",
+      "paths": [
+        "src/text2bim_massing/workflow.py"
+      ]
+    },
+    {
+      "change_id": "PACKAGING",
+      "kind": "new-tests",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
+      "paths": [
+        "tests/conftest.py",
+        "tests/test_adaptation_audit.py",
+        "tests/test_adapters.py",
+        "tests/test_cli_codex.py",
+        "tests/test_execution.py",
+        "tests/test_geometry_scene.py",
+        "tests/test_llm.py",
+        "tests/test_maslov_integration.py",
+        "tests/test_sources.py",
+        "tests/test_tools_interpreter.py",
+        "tests/test_workflow.py"
+      ]
+    },
+    {
+      "change_id": "SOURCES",
+      "kind": "preserved-source-and-provenance",
+      "reason": "Полный tree исходного commit сохранён; 11 выбранных файлов скопированы побайтово. Остальные файлы явно исключены по назначению.",
+      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе.",
+      "verification": "Git blob SHA/SHA-256, полный file/declaration inventory, tests/test_sources.py и audit --check.",
+      "paths": [
+        "upstream/maslov/manifest.json",
+        "upstream/maslov/src/polygons_to_shapely_converter.py",
+        "upstream/maslov/src/shapely_to_polygons_converter.py",
+        "upstream/text2bim/LICENSE",
+        "upstream/text2bim/manifest.json",
+        "upstream/text2bim/requirements.txt",
+        "upstream/text2bim/tool_agent/agents.py",
+        "upstream/text2bim/tool_agent/multi_agents_workflow.py",
+        "upstream/text2bim/tool_agent/muti_agent_prompt/checker_chat_prompt_temp.txt",
+        "upstream/text2bim/tool_agent/muti_agent_prompt/coder_chat_prompt_temp.txt",
+        "upstream/text2bim/tool_agent/muti_agent_prompt/floor_plan_designer_chat_prompt_few_shots.txt",
+        "upstream/text2bim/tool_agent/muti_agent_prompt/po_chat_prompt_temp.txt",
+        "upstream/text2bim/tool_agent/python_interpreter.py",
+        "upstream/text2bim/tool_agent/utils.py",
+        "upstream/text2bim/tool_agent/vw_tools_extend.py",
+        "upstream/text2bim/tree.json"
+      ]
+    }
+  ],
+  "source_disposition": {
+    ".gitignore": {
+      "status": "replaced",
+      "reason": "Standalone Python/Linux packaging и документация заменяют настройку Vectorworks/Windows."
+    },
+    ".vscode/launch.json": {
+      "status": "replaced",
+      "reason": "Standalone Python/Linux packaging и документация заменяют настройку Vectorworks/Windows."
+    },
+    "LICENSE": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "README.md": {
+      "status": "replaced",
+      "reason": "Standalone Python/Linux packaging и документация заменяют настройку Vectorworks/Windows."
+    },
+    "data/state.json": {
+      "status": "replaced",
+      "reason": "Global GUI state заменён per-run snapshot и interpreter state; входных UUID Vectorworks нет."
+    },
+    "data/test.wav": {
+      "status": "excluded",
+      "reason": "Демо/аудио/иллюстрации не являются входом standalone text-only massing workflow."
+    },
+    "data/test_env_2024_new.vwx": {
+      "status": "excluded",
+      "reason": "Проприетарная исходная сцена Vectorworks; заменена новой сценой массингов."
+    },
+    "data/test_env_2025_new.vwx": {
+      "status": "excluded",
+      "reason": "Проприетарная исходная сцена Vectorworks; заменена новой сценой массингов."
+    },
+    "demo.gif": {
+      "status": "excluded",
+      "reason": "Демо/аудио/иллюстрации не являются входом standalone text-only massing workflow."
+    },
+    "method.png": {
+      "status": "excluded",
+      "reason": "Демо/аудио/иллюстрации не являются входом standalone text-only massing workflow."
+    },
+    "requirements.txt": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "test_prompt.txt": {
+      "status": "excluded",
+      "reason": "Исходные BIM/Vectorworks задачи не выдаются за massing benchmark; новые проверки помечены отдельно."
+    },
+    "tool_agent/Ifc_test_data/.gitignore": {
+      "status": "replaced",
+      "reason": "IFC/Solibri/BCF engine/checking заменены внешним callable evaluator и JSON report."
+    },
+    "tool_agent/Ifc_test_data/sample_model.ifc": {
+      "status": "replaced",
+      "reason": "IFC/Solibri/BCF engine/checking заменены внешним callable evaluator и JSON report."
+    },
+    "tool_agent/Solibri_workflow_xml.xml": {
+      "status": "replaced",
+      "reason": "IFC/Solibri/BCF engine/checking заменены внешним callable evaluator и JSON report."
+    },
+    "tool_agent/agents.py": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/multi_agents_workflow.py": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/muti_agent_prompt/checker_chat_prompt_temp.txt": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/muti_agent_prompt/coder_chat_prompt_temp.txt": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/muti_agent_prompt/floor_plan_designer_chat_prompt_few_shots.txt": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/muti_agent_prompt/po_chat_prompt_temp.txt": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/python_interpreter.py": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/solibri_checker.py": {
+      "status": "replaced",
+      "reason": "IFC/Solibri/BCF engine/checking заменены внешним callable evaluator и JSON report."
+    },
+    "tool_agent/solibri_data/.gitignore": {
+      "status": "replaced",
+      "reason": "IFC/Solibri/BCF engine/checking заменены внешним callable evaluator и JSON report."
+    },
+    "tool_agent/solibri_data/LLM-checking-FullExample.smc": {
+      "status": "replaced",
+      "reason": "IFC/Solibri/BCF engine/checking заменены внешним callable evaluator и JSON report."
+    },
+    "tool_agent/speech2text.py": {
+      "status": "excluded",
+      "reason": "Интерфейс Vectorworks/голосовой ввод вне текстового API; GUI/audio flow не переносится."
+    },
+    "tool_agent/test_code.py": {
+      "status": "excluded",
+      "reason": "Исходные BIM/Vectorworks задачи не выдаются за massing benchmark; новые проверки помечены отдельно."
+    },
+    "tool_agent/utils.py": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "tool_agent/vs.py": {
+      "status": "excluded",
+      "reason": "API-заглушки vs.py не являются рабочим геометрическим движком."
+    },
+    "tool_agent/vs_interface.py": {
+      "status": "excluded",
+      "reason": "Интерфейс Vectorworks/голосовой ввод вне текстового API; GUI/audio flow не переносится."
+    },
+    "tool_agent/vw_tools_extend.py": {
+      "status": "archived",
+      "reason": "Оригинал сохранён с Git blob SHA; перенос/исключения declarations указаны ниже."
+    },
+    "web_palette/.gitignore": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/LICENSE": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2024/WebPaletteTUM.vlb": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2024/WebPaletteTUM.vwr/Strings/WebPaletteTUM.vwstrings": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2024/WebPaletteTUM.vwr/html/index.html": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2024/WebPaletteTUM.vwr/html/main.js": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2025/WebPaletteTUM.vlb": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2025/WebPaletteTUM.vwr/Strings/ExtMenuShowWebPaletteTUM.vwstrings": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2025/WebPaletteTUM.vwr/Strings/WebPaletteTUM.vwstrings": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2025/WebPaletteTUM.vwr/html/index.html": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/Palette2025/WebPaletteTUM.vwr/html/main.js": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/README.md": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    },
+    "web_palette/software_architect.png": {
+      "status": "excluded",
+      "reason": "Web palette/Vectorworks SDK UI вне standalone massing API; соответствующие assets/licensing не распространяются."
+    }
+  },
+  "symbol_disposition": {
+    "tool_agent/agents.py": {
+      "plan_designer": {
+        "status": "adapted",
+        "reason": "Injected transport/executor/tool descriptions; роли и подстановка промптов сохранены; AGENTS/CONTEXT/PROMPTS описывают изменения."
+      },
+      "MyAgent": {
+        "status": "adapted",
+        "reason": "Injected transport/executor/tool descriptions; роли и подстановка промптов сохранены; AGENTS/CONTEXT/PROMPTS описывают изменения."
+      },
+      "MyAgent.__init__": {
+        "status": "adapted",
+        "reason": "Injected transport/executor/tool descriptions; роли и подстановка промптов сохранены; AGENTS/CONTEXT/PROMPTS описывают изменения."
+      },
+      "MyAgent.log_new": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MyAgent.generate_with_function_call": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MyAgent.generate_with_img": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MyAgent.chat": {
+        "status": "adapted",
+        "reason": "Injected transport/executor/tool descriptions; роли и подстановка промптов сохранены; AGENTS/CONTEXT/PROMPTS описывают изменения."
+      },
+      "MyAgent.chat_with_function_call": {
+        "status": "adapted",
+        "reason": "Injected transport/executor/tool descriptions; роли и подстановка промптов сохранены; AGENTS/CONTEXT/PROMPTS описывают изменения."
+      },
+      "MyAgent.chat_check": {
+        "status": "adapted",
+        "reason": "Injected transport/executor/tool descriptions; роли и подстановка промптов сохранены; AGENTS/CONTEXT/PROMPTS описывают изменения."
+      },
+      "ClaudeAgent": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "ClaudeAgent.__init__": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "ClaudeAgent.generate_many": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "ClaudeAgent.generate_one": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "ClaudeAgent._completion_generate": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "ClaudeAgent.generate_with_img": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "ClaudeAgent.generate_with_function_call": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MistralAgent": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MistralAgent.__init__": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MistralAgent.generate_many": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MistralAgent.generate_one": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MistralAgent._completion_generate": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "MistralAgent.generate_with_function_call": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "GeminiAgent": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "GeminiAgent.__init__": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "GeminiAgent.generate_many": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "GeminiAgent.generate_one": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "GeminiAgent._completion_generate": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "GeminiAgent.generate_with_img": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "GeminiAgent.generate_with_function_call": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "OpenAiAgent": {
+        "status": "adapted",
+        "reason": "Один configured OpenAI transport + BudgetedLLM; native dispatch/unknown fallback сохранены; LLM описывает defaults и валидацию."
+      },
+      "OpenAiAgent.__init__": {
+        "status": "adapted",
+        "reason": "Один configured OpenAI transport + BudgetedLLM; native dispatch/unknown fallback сохранены; LLM описывает defaults и валидацию."
+      },
+      "OpenAiAgent.generate_many": {
+        "status": "adapted",
+        "reason": "Один configured OpenAI transport + BudgetedLLM; native dispatch/unknown fallback сохранены; LLM описывает defaults и валидацию."
+      },
+      "OpenAiAgent.generate_one": {
+        "status": "adapted",
+        "reason": "Один configured OpenAI transport + BudgetedLLM; native dispatch/unknown fallback сохранены; LLM описывает defaults и валидацию."
+      },
+      "OpenAiAgent.generate_with_img": {
+        "status": "excluded",
+        "reason": "Другой SDK provider, image API, абстрактный HF hook или frontend log; concrete equivalents заданы injected interfaces."
+      },
+      "OpenAiAgent.generate_with_function_call": {
+        "status": "adapted",
+        "reason": "Один configured OpenAI transport + BudgetedLLM; native dispatch/unknown fallback сохранены; LLM описывает defaults и валидацию."
+      },
+      "OpenAiAgent._chat_generate": {
+        "status": "adapted",
+        "reason": "Один configured OpenAI transport + BudgetedLLM; native dispatch/unknown fallback сохранены; LLM описывает defaults и валидацию."
+      }
+    },
+    "tool_agent/multi_agents_workflow.py": {
+      "streamer": {
+        "status": "replaced",
+        "reason": "Trace/history/artifacts вместо global stream buffer и experiment_log; новый код."
+      },
+      "get_output_sum": {
+        "status": "replaced",
+        "reason": "Trace/history/artifacts вместо global stream buffer и experiment_log; новый код."
+      },
+      "clear_output": {
+        "status": "replaced",
+        "reason": "Trace/history/artifacts вместо global stream buffer и experiment_log; новый код."
+      },
+      "init_vw_tools": {
+        "status": "replaced",
+        "reason": "MassingTools вместо Toolset Vectorworks."
+      },
+      "log_experiment_data": {
+        "status": "replaced",
+        "reason": "Trace/history/artifacts вместо global stream buffer и experiment_log; новый код."
+      },
+      "run_po_coder_agents": {
+        "status": "adapted",
+        "reason": "workflow.generate сохраняет PO/Programmer и Reviewer/patch; ARCHIVE/BUDGETS/CONTEXT описывают новый контроль."
+      },
+      "export_ifc_and_stuffs": {
+        "status": "excluded",
+        "reason": "IFC export/Solibri/GUI checking заменены JSON geometry и evaluator."
+      },
+      "run_agent_checking_loop": {
+        "status": "adapted",
+        "reason": "workflow.generate сохраняет PO/Programmer и Reviewer/patch; ARCHIVE/BUDGETS/CONTEXT описывают новый контроль."
+      },
+      "export_final_ifc_and_checks": {
+        "status": "excluded",
+        "reason": "IFC export/Solibri/GUI checking заменены JSON geometry и evaluator."
+      },
+      "pure_checking": {
+        "status": "excluded",
+        "reason": "IFC export/Solibri/GUI checking заменены JSON geometry и evaluator."
+      }
+    },
+    "tool_agent/python_interpreter.py": {
+      "InterpretorError": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "PersistentInterpreter": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "PersistentInterpreter.__init__": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "PersistentInterpreter.execute": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_ast": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "BreakException": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "ContinueException": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "ReturnException": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "ReturnException.__init__": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_while": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_class_def": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_lambda": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_with": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_global": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_nonlocal": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_yield": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_yield_from": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_function_def": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_async_function_def": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_await": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_async_for": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_async_with": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_setcomp": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_dictcomp": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_generator_exp": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_delete": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_listcomp": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_try": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_assert": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_raise": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_return": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_boolop": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_compare": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_import": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_import_from": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_unaryop": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_aug_assign": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_ifexp": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_assign": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_attribute": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_call": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_subscript": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_name": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_condition": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_if": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "unpack_tuple": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_for": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_binop": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "evaluate_slice": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      },
+      "create_persistent_interpreter": {
+        "status": "preserved-except-syntax-fix",
+        "reason": "Весь файл сравнивается точно; единственное изменение SyntaxError перечислено отдельно."
+      }
+    },
+    "tool_agent/utils.py": {
+      "local_image_to_data_url": {
+        "status": "excluded",
+        "reason": "Очистка GUI model или image encoding вне headless text-only контрактов."
+      },
+      "safe_encode": {
+        "status": "preserved-ast",
+        "reason": "Тело функции совпадает по AST; Vectorworks imports удалены."
+      },
+      "delete_all_in_model": {
+        "status": "excluded",
+        "reason": "Очистка GUI model или image encoding вне headless text-only контрактов."
+      },
+      "remove_last_human_message_with_regex": {
+        "status": "preserved-ast",
+        "reason": "Тело функции совпадает по AST; Vectorworks imports удалены."
+      },
+      "clean_code_for_chat_extend": {
+        "status": "preserved-ast",
+        "reason": "Тело функции совпадает по AST; Vectorworks imports удалены."
+      }
+    },
+    "tool_agent/vw_tools_extend.py": {
+      "set_uuid_of_nested_pios_in_duplicated_wall": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "set_ifc_property_for_duplication": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateStoryLayer": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateStoryLayer.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetStoryLayerActive": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetStoryLayerActive.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateSpace": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateSpace.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateWallTool": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateWallTool.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetWallThickness": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetWallThickness.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetWallHeight": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetWallHeight.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "GetWallElevation": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "GetWallElevation.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "GetWallThickness": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "GetWallThickness.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetWallStyle": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetWallStyle.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "AddWindowToWall": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "AddWindowToWall.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "AddDoorToWall": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "AddDoorToWall.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "Move": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "Move.__call__": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "DeleteTool": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "DeleteTool.__call__": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "FindSelect": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "FindSelect.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreatePolygon": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "CreatePolygon.__call__": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "GetPolygonVertex": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "GetPolygonVertex.__call__": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "GetVertNum": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "GetVertNum.__call__": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "CreateSlab": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateSlab.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetSlabHeight": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetSlabHeight.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "GetSlabHeight": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "GetSlabHeight.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetSlabStyle": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetSlabStyle.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "DuplicateObj": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "DuplicateObj.__call__": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "RotateObj": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "RotateObj.__call__": {
+        "status": "adapted-contract",
+        "reason": "MassingTools с прежними общими именами/возвратами; тела новые, layer args удалены, defaults/batches расширены; TOOLS."
+      },
+      "CreateRoof": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "CreateRoof.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetRoofAttributes": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetRoofAttributes.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetRoofStyle": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      },
+      "SetRoofStyle.__call__": {
+        "status": "excluded",
+        "reason": "BIM/story-layer/GUI selection/IFC-specific инструмент вне массингов."
+      }
+    }
+  },
+  "fragments": [
+    {
+      "id": "INTERPRETER",
+      "project": "text2bim",
+      "source": "tool_agent/python_interpreter.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/python_interpreter.py",
+      "source_symbol": null,
+      "target_symbol": null,
+      "mode": "adapted",
+      "reason": "Единственная допустимая правка — SyntaxError raises InterpretorError."
+    },
+    {
+      "id": "UTIL-safe_encode",
+      "project": "text2bim",
+      "source": "tool_agent/utils.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/utils.py",
+      "source_symbol": "safe_encode",
+      "target_symbol": "safe_encode",
+      "mode": "exact_ast",
+      "reason": "Тело без изменений; неиспользуемые функции/импорты исключены."
+    },
+    {
+      "id": "UTIL-remove_last_human_message_with_regex",
+      "project": "text2bim",
+      "source": "tool_agent/utils.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/utils.py",
+      "source_symbol": "remove_last_human_message_with_regex",
+      "target_symbol": "remove_last_human_message_with_regex",
+      "mode": "exact_ast",
+      "reason": "Тело без изменений; неиспользуемые функции/импорты исключены."
+    },
+    {
+      "id": "UTIL-clean_code_for_chat_extend",
+      "project": "text2bim",
+      "source": "tool_agent/utils.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/utils.py",
+      "source_symbol": "clean_code_for_chat_extend",
+      "target_symbol": "clean_code_for_chat_extend",
+      "mode": "exact_ast",
+      "reason": "Тело без изменений; неиспользуемые функции/импорты исключены."
+    },
+    {
+      "id": "AGENT-chat",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/agents.py",
+      "source_symbol": "MyAgent.chat",
+      "target_symbol": "MyAgent.chat",
+      "mode": "adapted",
+      "reason": "AGENTS/EXECUTION: transport и execution injected; остальное сравнивается явно."
+    },
+    {
+      "id": "AGENT-chat_with_function_call",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/agents.py",
+      "source_symbol": "MyAgent.chat_with_function_call",
+      "target_symbol": "MyAgent.chat_with_function_call",
+      "mode": "adapted",
+      "reason": "AGENTS/EXECUTION: transport и execution injected; остальное сравнивается явно."
+    },
+    {
+      "id": "AGENT-chat_check",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/agents.py",
+      "source_symbol": "MyAgent.chat_check",
+      "target_symbol": "MyAgent.chat_check",
+      "mode": "adapted",
+      "reason": "AGENTS/EXECUTION: transport и execution injected; остальное сравнивается явно."
+    },
+    {
+      "id": "AGENT-__init__",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/agents.py",
+      "source_symbol": "MyAgent.__init__",
+      "target_symbol": "MyAgent.__init__",
+      "mode": "adapted",
+      "reason": "AGENTS/EXECUTION: transport и execution injected; остальное сравнивается явно."
+    },
+    {
+      "id": "ARCHITECT-CALL",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/_vendor/text2bim/agents.py",
+      "source_symbol": "plan_designer",
+      "target_symbol": "plan_designer",
+      "mode": "adapted",
+      "reason": "Один configured backend вместо provider/model dispatch; подстановка task сохранена."
+    },
+    {
+      "id": "NATIVE-FUNCTION-CALL",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/runtime.py",
+      "source_symbol": "OpenAiAgent.generate_with_function_call",
+      "target_symbol": "BudgetedLLM.generate_with_function_call",
+      "mode": "adapted",
+      "reason": "Native response normalized; budget оборачивает каждый запрос, original query/fallback сохранены."
+    },
+    {
+      "id": "LLM-generate_many",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/llm.py",
+      "source_symbol": "OpenAiAgent.generate_many",
+      "target_symbol": "OpenAIClient.generate_many",
+      "mode": "adapted",
+      "reason": "LLM: извлечён transport; форма API запроса та же, параметры задаются явно."
+    },
+    {
+      "id": "LLM-generate_one",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/llm.py",
+      "source_symbol": "OpenAiAgent.generate_one",
+      "target_symbol": "OpenAIClient.generate_one",
+      "mode": "adapted",
+      "reason": "LLM: извлечён transport; форма API запроса та же, параметры задаются явно."
+    },
+    {
+      "id": "LLM-_chat_generate",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "target": "src/text2bim_massing/llm.py",
+      "source_symbol": "OpenAiAgent._chat_generate",
+      "target_symbol": "OpenAIClient._chat_generate",
+      "mode": "adapted",
+      "reason": "LLM: извлечён transport; форма API запроса та же, параметры задаются явно."
+    },
+    {
+      "id": "INITIAL-WORKFLOW",
+      "project": "text2bim",
+      "source": "tool_agent/multi_agents_workflow.py",
+      "target": "src/text2bim_massing/workflow.py",
+      "source_symbol": "run_po_coder_agents",
+      "target_symbol": "generate",
+      "mode": "adapted",
+      "reason": "Внешний жизненный цикл/архив добавлен вокруг ролей; raw task bypass удалён."
+    },
+    {
+      "id": "PATCH-REQUEST",
+      "project": "text2bim",
+      "source": "tool_agent/multi_agents_workflow.py",
+      "target": "src/text2bim_massing/workflow.py",
+      "source_symbol": "run_agent_checking_loop",
+      "target_symbol": "review_patch_task",
+      "mode": "exact_ast",
+      "reason": "Выражение исходного запроса patch сохранено без изменений.",
+      "source_assignment": "input_review_result",
+      "target_assignment": "input_review_result"
+    },
+    {
+      "id": "MASLOV-polygons_to_shapely_converter.py",
+      "project": "maslov",
+      "source": "src/polygons_to_shapely_converter.py",
+      "target": "src/text2bim_massing/_vendor/maslov/polygons_to_shapely_converter.py",
+      "source_symbol": "PolygonsToShapelyConverter.__call__",
+      "target_symbol": "PolygonsToShapelyConverter.__call__",
+      "mode": "exact_ast",
+      "reason": "Исходный метод без изменений; лишние импорты/база Function удалены."
+    },
+    {
+      "id": "MASLOV-shapely_to_polygons_converter.py",
+      "project": "maslov",
+      "source": "src/shapely_to_polygons_converter.py",
+      "target": "src/text2bim_massing/_vendor/maslov/shapely_to_polygons_converter.py",
+      "source_symbol": "ShapelyToPolygonsConverter.__call__",
+      "target_symbol": "ShapelyToPolygonsConverter.__call__",
+      "mode": "exact_ast",
+      "reason": "Исходный метод без изменений; лишние импорты/база Function удалены."
+    },
+    {
+      "id": "ORIGINAL-PROMPT-po_chat_prompt_temp.txt",
+      "project": "text2bim",
+      "source": "tool_agent/muti_agent_prompt/po_chat_prompt_temp.txt",
+      "target": "src/text2bim_massing/_vendor/text2bim/prompts/po_chat_prompt_temp.txt",
+      "source_symbol": null,
+      "target_symbol": null,
+      "mode": "exact_bytes",
+      "reason": "Оригинальные prompt resources сохранены побайтово. Runtime diff отдельно ниже."
+    },
+    {
+      "id": "ORIGINAL-PROMPT-coder_chat_prompt_temp.txt",
+      "project": "text2bim",
+      "source": "tool_agent/muti_agent_prompt/coder_chat_prompt_temp.txt",
+      "target": "src/text2bim_massing/_vendor/text2bim/prompts/coder_chat_prompt_temp.txt",
+      "source_symbol": null,
+      "target_symbol": null,
+      "mode": "exact_bytes",
+      "reason": "Оригинальные prompt resources сохранены побайтово. Runtime diff отдельно ниже."
+    },
+    {
+      "id": "ORIGINAL-PROMPT-checker_chat_prompt_temp.txt",
+      "project": "text2bim",
+      "source": "tool_agent/muti_agent_prompt/checker_chat_prompt_temp.txt",
+      "target": "src/text2bim_massing/_vendor/text2bim/prompts/checker_chat_prompt_temp.txt",
+      "source_symbol": null,
+      "target_symbol": null,
+      "mode": "exact_bytes",
+      "reason": "Оригинальные prompt resources сохранены побайтово. Runtime diff отдельно ниже."
+    },
+    {
+      "id": "ORIGINAL-PROMPT-floor_plan_designer_chat_prompt_few_shots.txt",
+      "project": "text2bim",
+      "source": "tool_agent/muti_agent_prompt/floor_plan_designer_chat_prompt_few_shots.txt",
+      "target": "src/text2bim_massing/_vendor/text2bim/prompts/floor_plan_designer_chat_prompt_few_shots.txt",
+      "source_symbol": null,
+      "target_symbol": null,
+      "mode": "exact_bytes",
+      "reason": "Оригинальные prompt resources сохранены побайтово. Runtime diff отдельно ниже."
+    },
+    {
+      "id": "LLM-__init__",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "source_symbol": "OpenAiAgent.__init__",
+      "target": "src/text2bim_massing/llm.py",
+      "target_symbol": "OpenAIClient.__init__",
+      "mode": "adapted",
+      "reason": "Инициализация и SDK dispatch выделены в client; параметры, timeout, usage и transport явные, исходный SDK 1.82.0 сохранён."
+    },
+    {
+      "id": "LLM-complete",
+      "project": "text2bim",
+      "source": "tool_agent/agents.py",
+      "source_symbol": "OpenAiAgent._chat_generate",
+      "target": "src/text2bim_massing/llm.py",
+      "target_symbol": "OpenAIClient.complete",
+      "mode": "adapted",
+      "reason": "Инициализация и SDK dispatch выделены в client; параметры, timeout, usage и transport явные, исходный SDK 1.82.0 сохранён."
+    },
+    {
+      "id": "TOOL-move_obj",
+      "project": "text2bim",
+      "source": "tool_agent/vw_tools_extend.py",
+      "source_symbol": "Move.__call__",
+      "target": "src/text2bim_massing/tools.py",
+      "target_symbol": "MassingTools.move_obj",
+      "mode": "adapted",
+      "reason": "Vectorworks и layer заменены Scene: исходное имя и основной контракт сохранены; единицы, ограничения геометрии, defaults и batch-расширения перечислены в TOOLS/GEOMETRY."
+    },
+    {
+      "id": "TOOL-delete_element",
+      "project": "text2bim",
+      "source": "tool_agent/vw_tools_extend.py",
+      "source_symbol": "DeleteTool.__call__",
+      "target": "src/text2bim_massing/tools.py",
+      "target_symbol": "MassingTools.delete_element",
+      "mode": "adapted",
+      "reason": "Vectorworks и layer заменены Scene: исходное имя и основной контракт сохранены; единицы, ограничения геометрии, defaults и batch-расширения перечислены в TOOLS/GEOMETRY."
+    },
+    {
+      "id": "TOOL-create_polygon",
+      "project": "text2bim",
+      "source": "tool_agent/vw_tools_extend.py",
+      "source_symbol": "CreatePolygon.__call__",
+      "target": "src/text2bim_massing/tools.py",
+      "target_symbol": "MassingTools.create_polygon",
+      "mode": "adapted",
+      "reason": "Vectorworks и layer заменены Scene: исходное имя и основной контракт сохранены; единицы, ограничения геометрии, defaults и batch-расширения перечислены в TOOLS/GEOMETRY."
+    },
+    {
+      "id": "TOOL-get_polygon_vertex",
+      "project": "text2bim",
+      "source": "tool_agent/vw_tools_extend.py",
+      "source_symbol": "GetPolygonVertex.__call__",
+      "target": "src/text2bim_massing/tools.py",
+      "target_symbol": "MassingTools.get_polygon_vertex",
+      "mode": "adapted",
+      "reason": "Vectorworks и layer заменены Scene: исходное имя и основной контракт сохранены; единицы, ограничения геометрии, defaults и batch-расширения перечислены в TOOLS/GEOMETRY."
+    },
+    {
+      "id": "TOOL-get_vertex_count",
+      "project": "text2bim",
+      "source": "tool_agent/vw_tools_extend.py",
+      "source_symbol": "GetVertNum.__call__",
+      "target": "src/text2bim_massing/tools.py",
+      "target_symbol": "MassingTools.get_vertex_count",
+      "mode": "adapted",
+      "reason": "Vectorworks и layer заменены Scene: исходное имя и основной контракт сохранены; единицы, ограничения геометрии, defaults и batch-расширения перечислены в TOOLS/GEOMETRY."
+    },
+    {
+      "id": "TOOL-duplicate_obj",
+      "project": "text2bim",
+      "source": "tool_agent/vw_tools_extend.py",
+      "source_symbol": "DuplicateObj.__call__",
+      "target": "src/text2bim_massing/tools.py",
+      "target_symbol": "MassingTools.duplicate_obj",
+      "mode": "adapted",
+      "reason": "Vectorworks и layer заменены Scene: исходное имя и основной контракт сохранены; единицы, ограничения геометрии, defaults и batch-расширения перечислены в TOOLS/GEOMETRY."
+    },
+    {
+      "id": "TOOL-rotate_obj",
+      "project": "text2bim",
+      "source": "tool_agent/vw_tools_extend.py",
+      "source_symbol": "RotateObj.__call__",
+      "target": "src/text2bim_massing/tools.py",
+      "target_symbol": "MassingTools.rotate_obj",
+      "mode": "adapted",
+      "reason": "Vectorworks и layer заменены Scene: исходное имя и основной контракт сохранены; единицы, ограничения геометрии, defaults и batch-расширения перечислены в TOOLS/GEOMETRY."
+    }
+  ]
+}

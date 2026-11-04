@@ -77,6 +77,19 @@ def _review_decision(text):
     return decision
 
 
+def review_patch_task(code_result, review_result):
+    """Unchanged patch-request expression from upstream run_agent_checking_loop."""
+    input_review_result = (
+        "The Python code that generates the building with some issues: \n"
+        + f"{code_result}"
+        + "Please write a patch to solve the issues based on the review suggestions. Do not write diff but a excutable python script in a code block. You can reuse the variables defined in the original code, but DO NOT rewrite the original code."
+        + "\n"
+        + "Review suggestions: "
+        + review_result
+    )
+    return input_review_result
+
+
 def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> GenerationResult:
     """Generate, evaluate and improve massing; retain partial results on budget exhaustion.
 
@@ -173,7 +186,7 @@ def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> G
             function_description=PLAN_FUNCTION,
         )
         # From run_po_coder_agents: PO answer is passed to Programmer, whose chat executes code.
-        programmer_task = answer + "\nOriginal task and context:\n" + query
+        programmer_task = answer
         while iteration < config.max_iterations:
             budget.check()
             iteration += 1
@@ -228,19 +241,9 @@ def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> G
             executor.codes = [chosen.code]
             # Source's review patch request is retained, with the selected immutable state made explicit.
             programmer_task = (
-                "The Python code that generates the building with some issues:\n"
-                + chosen.code
-                + "\nPlease write a patch to solve the issues based on the review suggestions. "
-                "Do not write diff but an executable python script in a code block. "
-                "You can reuse the variables defined in the original code, but DO NOT rewrite the original code."
-                + "\nReview suggestions: "
-                + decision["guidance"]
-                + "\nSelected evaluated candidate: "
-                + json.dumps(chosen.to_dict())
+                review_patch_task(chosen.code, decision["guidance"])
                 + "\nSelected scene with stable IDs: "
                 + chosen.snapshot.json
-                + "\nOriginal task and context:\n"
-                + query
             )
     except BudgetExceeded as error:
         status, reason = "budget_exhausted", str(error)

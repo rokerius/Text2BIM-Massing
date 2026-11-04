@@ -17,7 +17,7 @@ manifold3d==3.5.4
 mapbox_earcut==2.1.0
 networkx==3.7
 numpy==2.2.6
-openai==2.54.0
+openai==1.82.0
 packaging==26.3
 pluggy==1.7.0
 pydantic==2.14.2

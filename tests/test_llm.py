@@ -129,5 +129,5 @@ def test_native_function_call_response_and_explicit_remaining_timeout():
         assert response.tool_calls[0].name == "plan_designer"
         assert response.tool_calls[0].arguments == '{"query":"plan"}'
         assert response.text == ""
-        assert json.loads(observed[0].content)["parallel_tool_calls"] is False
+        assert "parallel_tool_calls" not in json.loads(observed[0].content)
         assert observed[0].extensions["timeout"]["read"] == 1.25

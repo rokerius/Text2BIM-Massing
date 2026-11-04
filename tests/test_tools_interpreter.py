@@ -67,3 +67,11 @@ def test_vertex_reads_and_profile_and_solid_editing(rings):
 def test_units_must_be_explicitly_supported():
     with pytest.raises(ValueError, match="units"):
         MassingTools(Scene(), units="cm")
+
+
+def test_common_tool_return_values_match_the_source_contract(rings):
+    tools = MassingTools(Scene())
+    obj = tools.create_profile(rings)
+    assert tools.move_obj(obj, 1, 0, 0) is None
+    assert tools.rotate_obj(obj, 90) == obj
+    assert tools.rotate_obj([obj], 90) == [obj]

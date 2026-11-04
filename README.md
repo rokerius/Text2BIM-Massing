@@ -24,7 +24,8 @@ ChatGPT и настоящим `BuildingFloorCount` Маслова: цикл ул
 с Linux Codex CLI через ту же подписку. Подтверждены Reviewer-патч,
 выбор оценённого кандидата, вызов Architect и сохранение отверстия.
 
-Установка и полный набор из 81 теста проверены в чистом Linux-контейнере.
+Исходная проверка в Linux: 81 тест. После сверки отличий — 90 тестов на macOS;
+повторная Linux-проверка описывается в отчёте.
 Интеграция в отдельный эксперимент Маслова остаётся следующим этапом.
 Параметризация и NSGA-II остаются во внешнем методе Маслова.
 
@@ -52,8 +53,9 @@ python -m pip install -e '.[dev,llm,mesh,maslov]'
 
 ```bash
 python -m pip check
-ruff check src tests examples
-ruff format --check src tests examples
+python tools/audit_adaptation.py --check
+ruff check src tests examples tools
+ruff format --check src tests examples tools
 python -m pytest -c pyproject.toml tests -q
 python -m pytest -c pyproject.toml tests -q --maslov-repo /path/to/massing-generation
 python -m build
@@ -219,7 +221,12 @@ Codex-прогоны выполнялись отдельно и перечисл
 
 [Карта переноса](docs/source-map.md), [журнал адаптации](docs/text2bim-adaptation.md)
 и [уведомления об исходниках](THIRD_PARTY_NOTICES.md) описывают заимствования и
-новый код. Оригиналы с хешами находятся в `upstream/`. Четыре исходных промпта
+новый код. [Полный реестр отличий](docs/text2bim-diff.md) охватывает все 44 файла
+исходного tree и 156 declarations выбранных Python-файлов. Проверка
+`tools/audit_adaptation.py --check` отклоняет новые неописанные файлы и изменения
+проверенного состояния; перед `--write` нужно сверить причины в
+`docs/adaptation-spec.json`. Это контроль полноты учёта, а не доказательство
+эквивалентности методов. Оригиналы с хешами находятся в `upstream/`. Четыре исходных промпта
 сохранены без изменений как ресурсы пакета. Адаптации находятся в `prompts.py`
 и сохраняются в `prompts.json` каждого запуска.
 

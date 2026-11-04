@@ -55,15 +55,16 @@ class MassingTools:
         )
 
     def move_obj(self, uuid, xDistance=0, yDistance=0, zDistance=0):
-        """Move an ID or list of IDs; 2D profiles only support x/y movement. Return IDs."""
-        return self.scene.move(
+        """Move an ID or list of IDs; 2D profiles only support x/y movement. Return None."""
+        self.scene.move(
             uuid, self._length(xDistance), self._length(yDistance), self._length(zDistance)
         )
 
     def rotate_obj(self, uuid, angle, center=None):
-        """Rotate IDs by degrees around center (x,y), or each object's bounding-box center."""
+        """Rotate by degrees about center or bounding-box center; return the same ID(s)."""
         center = None if center is None else [self._length(value) for value in center]
-        return self.scene.rotate(uuid, angle, center)
+        ids = self.scene.rotate(uuid, angle, center)
+        return uuid if isinstance(uuid, str) else ids
 
     def duplicate_obj(self, element_uuid, n=1):
         """Copy an ID or list of IDs n times; return new IDs. Originals retain their IDs."""

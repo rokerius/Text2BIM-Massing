@@ -78,7 +78,7 @@ class MyAgent:
         self.log("agent_text", role=self.role, text=result)
         return result
 
-    def chat_check(self, code=None, issues=None, stop=None):
+    def chat_check(self, code=None, issues=None, stop=["User:", "Programmer:", "Product Owner:", "Reviewer:"]):
         prompt = self.chat_prompt_template.replace("<<all_tools>>", self.tool_description)
         if code:
             prompt = prompt.replace("<<code>>", code)

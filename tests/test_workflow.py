@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -29,7 +30,7 @@ class ScriptedLLM:
         self.requests = []
 
     def complete(self, messages, *, tools=None, stop=None, timeout=None):
-        self.requests.append({"messages": messages, "tools": tools})
+        self.requests.append(deepcopy({"messages": messages, "tools": tools}))
         reply = next(self.replies)
         if isinstance(reply, BaseException):
             raise reply
@@ -92,6 +93,52 @@ def test_architect_is_only_called_when_enhancer_requests_it(tmp_path):
     roles = [e["role"] for e in result.history if e["event"] == "llm_request"]
     assert roles == ["Enhancer", "Architect", "Enhancer", "Programmer", "Reviewer"]
     assert any(m["role"] == "tool" for m in llm.requests[2]["messages"])
+
+
+def test_multiple_architect_requests_keep_upstream_sequential_dispatch(tmp_path):
+    requests = (
+        ToolCall("a", "plan_designer", '{"query":"first plan"}'),
+        ToolCall("b", "plan_designer", '{"query":"second plan"}'),
+    )
+    llm = ScriptedLLM(
+        [
+            LLMResponse("", "test", 1, 1, 2, requests),
+            "Plan A",
+            "Plan B",
+            "Enhanced task",
+            BUILD,
+            decision(),
+        ]
+    )
+    result = generate("Build", report, llm, output_dir=tmp_path)
+    assert result.status == "completed", result.reason
+    roles = [e["role"] for e in result.history if e["event"] == "llm_request"]
+    assert roles == ["Enhancer", "Architect", "Architect", "Enhancer", "Programmer", "Reviewer"]
+
+
+def test_unknown_function_uses_the_original_text_only_fallback(tmp_path):
+    llm = ScriptedLLM(
+        [
+            LLMResponse("", "test", 1, 1, 2, (ToolCall("x", "invented", "{}"),)),
+            "Enhanced task",
+            BUILD,
+            decision(),
+        ]
+    )
+    result = generate("Build", report, llm, output_dir=tmp_path)
+    assert result.status == "completed", result.reason
+    assert llm.requests[1]["messages"] == llm.requests[0]["messages"]
+    assert llm.requests[1]["tools"] is None
+
+
+def test_initial_programmer_receives_the_enhancer_answer_without_a_bypass(tmp_path):
+    original = "ORIGINAL_TASK_MARKER"
+    llm = ScriptedLLM(["ENHANCED_TASK_MARKER", BUILD, decision()])
+    result = generate(original, report, llm, output_dir=tmp_path)
+    assert result.status == "completed", result.reason
+    prompt = llm.requests[1]["messages"][0]["content"]
+    assert "ENHANCED_TASK_MARKER" in prompt
+    assert original not in prompt
 
 
 def test_syntax_repair_is_separate_from_evaluated_shape_improvement(tmp_path):

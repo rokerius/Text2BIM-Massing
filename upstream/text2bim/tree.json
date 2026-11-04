@@ -1,0 +1,271 @@
+{
+  "repository": "https://github.com/dcy0577/Text2BIM",
+  "commit": "b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc",
+  "tree": "f157df288248f101150489b0f3abbece47f17fb9",
+  "files": [
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "git_blob": "05863bb2f8636a225bc6d3fbfc39920ebe2fa69c",
+      "size": 3153
+    },
+    {
+      "path": ".vscode/launch.json",
+      "mode": "100644",
+      "git_blob": "31ddd245c73e6fc45199b9b8c17bf9400244f779",
+      "size": 747
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "git_blob": "fdd5a4dd59fc1dfd82afba9d79c9814a9fa8a554",
+      "size": 1064
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "git_blob": "3ffdac069808d174a9913495dba2466dd9934400",
+      "size": 5880
+    },
+    {
+      "path": "data/state.json",
+      "mode": "100644",
+      "git_blob": "9e26dfeeb6e641a33dae4961196235bdb965b21b",
+      "size": 2
+    },
+    {
+      "path": "data/test.wav",
+      "mode": "100644",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "data/test_env_2024_new.vwx",
+      "mode": "100644",
+      "git_blob": "eef43f448fdc47d5a6f6d81d07a81fca4122a54d",
+      "size": 20704430
+    },
+    {
+      "path": "data/test_env_2025_new.vwx",
+      "mode": "100644",
+      "git_blob": "3252320198a5ba86aa80a9abf47674c934c3da77",
+      "size": 20700710
+    },
+    {
+      "path": "demo.gif",
+      "mode": "100644",
+      "git_blob": "8781a9f4cdd9dffb4d71d1cfda3b0144d9a9f6bb",
+      "size": 2824682
+    },
+    {
+      "path": "method.png",
+      "mode": "100644",
+      "git_blob": "effe371da3b1d0c777ed5440b1386b9216aff1d6",
+      "size": 1010546
+    },
+    {
+      "path": "requirements.txt",
+      "mode": "100644",
+      "git_blob": "24e3e1e3fe640be9f3b465da473706ac76867223",
+      "size": 280
+    },
+    {
+      "path": "test_prompt.txt",
+      "mode": "100644",
+      "git_blob": "d1ced3539b5987fc0e2644c3e62612f1026a8e73",
+      "size": 6251
+    },
+    {
+      "path": "tool_agent/Ifc_test_data/.gitignore",
+      "mode": "100644",
+      "git_blob": "ce40fcd4dc4d467b71ffddc62447a8b2d9c8152d",
+      "size": 31
+    },
+    {
+      "path": "tool_agent/Ifc_test_data/sample_model.ifc",
+      "mode": "100644",
+      "git_blob": "dc4ebcf3187fba5c9c1b969b68c3fd0266970d86",
+      "size": 258439
+    },
+    {
+      "path": "tool_agent/Solibri_workflow_xml.xml",
+      "mode": "100644",
+      "git_blob": "9070916072254c9d147e0465636f9f0f78c0d5e5",
+      "size": 727
+    },
+    {
+      "path": "tool_agent/agents.py",
+      "mode": "100644",
+      "git_blob": "7f4a83bcd62315f2eab84767c9b92881f88e4124",
+      "size": 39221
+    },
+    {
+      "path": "tool_agent/multi_agents_workflow.py",
+      "mode": "100644",
+      "git_blob": "d85b3f97258db078fdbbfd7be7168b92885d80ac",
+      "size": 23539
+    },
+    {
+      "path": "tool_agent/muti_agent_prompt/checker_chat_prompt_temp.txt",
+      "mode": "100644",
+      "git_blob": "07f3706ed7f5475a8898d3991817c5f018f7b52d",
+      "size": 1121
+    },
+    {
+      "path": "tool_agent/muti_agent_prompt/coder_chat_prompt_temp.txt",
+      "mode": "100644",
+      "git_blob": "34f3bfeea88a503205f21af8b6e79801d1d6586e",
+      "size": 1133
+    },
+    {
+      "path": "tool_agent/muti_agent_prompt/floor_plan_designer_chat_prompt_few_shots.txt",
+      "mode": "100644",
+      "git_blob": "8ce54ee67a9e7fd490d4fd6ac4d5ba5844dfc528",
+      "size": 4951
+    },
+    {
+      "path": "tool_agent/muti_agent_prompt/po_chat_prompt_temp.txt",
+      "mode": "100644",
+      "git_blob": "bc5bae09ae7b5c51d1f85519a0bc75c39ee8a74c",
+      "size": 1300
+    },
+    {
+      "path": "tool_agent/python_interpreter.py",
+      "mode": "100644",
+      "git_blob": "4432b5dc1af14a64c0b7c0ef45bea60fa6b7a994",
+      "size": 53659
+    },
+    {
+      "path": "tool_agent/solibri_checker.py",
+      "mode": "100644",
+      "git_blob": "41e18364e8008d763d2fa6e1353f58ce0f3ab611",
+      "size": 4580
+    },
+    {
+      "path": "tool_agent/solibri_data/.gitignore",
+      "mode": "100644",
+      "git_blob": "8e061060f89560f93e32b87180860f8d30de83af",
+      "size": 43
+    },
+    {
+      "path": "tool_agent/solibri_data/LLM-checking-FullExample.smc",
+      "mode": "100644",
+      "git_blob": "ebf76d5ff6a9ea4af73e922d0c7bec30431ad200",
+      "size": 186514
+    },
+    {
+      "path": "tool_agent/speech2text.py",
+      "mode": "100644",
+      "git_blob": "15a902ac328daedaaf21b6b104f9367dae5a7cea",
+      "size": 2341
+    },
+    {
+      "path": "tool_agent/test_code.py",
+      "mode": "100644",
+      "git_blob": "09a26190d0be9f25882043883b5b892ec2f12f5e",
+      "size": 25999
+    },
+    {
+      "path": "tool_agent/utils.py",
+      "mode": "100644",
+      "git_blob": "aec4a89a4f641be82eed7cfe2fc9db6ba1ae1814",
+      "size": 2468
+    },
+    {
+      "path": "tool_agent/vs.py",
+      "mode": "100644",
+      "git_blob": "706e6d3f60f628f6effd76c7e36217e169c6bfd2",
+      "size": 1484187
+    },
+    {
+      "path": "tool_agent/vs_interface.py",
+      "mode": "100644",
+      "git_blob": "2096488749fff2e5038d9bb62000e4a5644d7516",
+      "size": 4961
+    },
+    {
+      "path": "tool_agent/vw_tools_extend.py",
+      "mode": "100644",
+      "git_blob": "c9c4e435271611a52cc2ac2d0975cf02a5c1b807",
+      "size": 51687
+    },
+    {
+      "path": "web_palette/.gitignore",
+      "mode": "100644",
+      "git_blob": "adc66a104f265d32e81badfbda96777af8372865",
+      "size": 94
+    },
+    {
+      "path": "web_palette/LICENSE",
+      "mode": "100644",
+      "git_blob": "3cacde862a47a44a97c49f3f2da907554a422a78",
+      "size": 18299
+    },
+    {
+      "path": "web_palette/Palette2024/WebPaletteTUM.vlb",
+      "mode": "100644",
+      "git_blob": "cece087b9b8ec073afb344fd7ce012af50c6d2cb",
+      "size": 1008128
+    },
+    {
+      "path": "web_palette/Palette2024/WebPaletteTUM.vwr/Strings/WebPaletteTUM.vwstrings",
+      "mode": "100644",
+      "git_blob": "e749ba2f53b8e8ec1d2ec14d60e34e3817e834fb",
+      "size": 60
+    },
+    {
+      "path": "web_palette/Palette2024/WebPaletteTUM.vwr/html/index.html",
+      "mode": "100644",
+      "git_blob": "1799bc42662f8072da4f305e1812ac77c831e192",
+      "size": 1004
+    },
+    {
+      "path": "web_palette/Palette2024/WebPaletteTUM.vwr/html/main.js",
+      "mode": "100644",
+      "git_blob": "d3cc5ef9be5b790484819f083715da271258f256",
+      "size": 624743
+    },
+    {
+      "path": "web_palette/Palette2025/WebPaletteTUM.vlb",
+      "mode": "100644",
+      "git_blob": "acb4500a96ba00d2b6f86c6034e46d8f7834f22d",
+      "size": 1178624
+    },
+    {
+      "path": "web_palette/Palette2025/WebPaletteTUM.vwr/Strings/ExtMenuShowWebPaletteTUM.vwstrings",
+      "mode": "100644",
+      "git_blob": "6210674d21a58a7de742af241c4272ef72418ea2",
+      "size": 294
+    },
+    {
+      "path": "web_palette/Palette2025/WebPaletteTUM.vwr/Strings/WebPaletteTUM.vwstrings",
+      "mode": "100644",
+      "git_blob": "e749ba2f53b8e8ec1d2ec14d60e34e3817e834fb",
+      "size": 60
+    },
+    {
+      "path": "web_palette/Palette2025/WebPaletteTUM.vwr/html/index.html",
+      "mode": "100644",
+      "git_blob": "1799bc42662f8072da4f305e1812ac77c831e192",
+      "size": 1004
+    },
+    {
+      "path": "web_palette/Palette2025/WebPaletteTUM.vwr/html/main.js",
+      "mode": "100644",
+      "git_blob": "64cec7436e0e92450992a5d124b4b529c66f82d4",
+      "size": 625220
+    },
+    {
+      "path": "web_palette/README.md",
+      "mode": "100644",
+      "git_blob": "8bfaf31dda4affbc61166e5c6f04748b05a07b61",
+      "size": 3981
+    },
+    {
+      "path": "web_palette/software_architect.png",
+      "mode": "100644",
+      "git_blob": "91c4f87fc936a540f7247e0a4d01513d0bd617e1",
+      "size": 451553
+    }
+  ]
+}

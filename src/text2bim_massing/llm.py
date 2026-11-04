@@ -109,7 +109,7 @@ class OpenAIClient:
         if self.config.send_stop and stop:
             options["stop"] = stop
         if tools:
-            options.update(tools=tools, tool_choice="auto", parallel_tool_calls=False)
+            options.update(tools=tools, tool_choice="auto")
         self.calls += 1
         self.last_response = None
         client = self.client

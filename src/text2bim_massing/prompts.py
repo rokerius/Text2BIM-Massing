@@ -9,6 +9,24 @@ SOURCE_NAMES = {
     "Architect": "floor_plan_designer_chat_prompt_few_shots.txt",
 }
 
+ARCHITECT_MASSING_EXAMPLE = '''Here is a sample conversation:
+"""
+User: I want to build an office building. I want the building to have 3 floors and the layout of each floor to be the same. Use a {width}{unit} x {depth}{unit} footprint and a {height}{unit} floor height.
+Architect: **3-Floor Office Building Design**
+
+**Massing Footprint:**
+- Rectangular profile: (0,0), ({width},0), ({width},{depth}), (0,{depth}).
+
+**Extrusion:**
+- Bottom elevation: 0{unit}. Top elevation: {top}{unit}.
+- The three floor levels share the same footprint.
+
+**Summary:**
+- Building dimensions: {width}{unit} x {depth}{unit} x 3 floors, as requested.
+"""
+
+'''
+
 
 def load_prompts(units="mm") -> dict[str, str]:
     if units not in {"m", "mm"}:
@@ -42,14 +60,24 @@ def load_prompts(units="mm") -> dict[str, str]:
         "Profiles and extrusions have independent geometry. Do not create walls, slabs, doors, windows or story layers.\n"
         "Now, based on the conversation given below",
     )
-    # Preserve the Architect role framing and task insertion, replacing its BIM
-    # checklist and wall/door few-shot with the massing-specific representation.
+    # Preserve role, rationality instruction, few-shot format and task insertion.
+    # The example adapts the source three-floor office to supported massing tools.
     architect = prompts["Architect"]
     prompts["Architect"] = architect[: architect.index("Depending on")]
     prompts["Architect"] += (
         "Describe massing footprints, holes, detached components and extrusion elevations in structured text. "
         "Respect the site and external task context. Give coordinates and dimensions; functional requirements "
-        "should guide volumes rather than BIM components. Use millimeter units. Minimize other prose.\n\n"
+        "should guide volumes rather than BIM components.\n\n"
+        + architect[
+            architect.index("Make your design") : architect.index("Here is a sample conversation:")
+        ]
+        + ARCHITECT_MASSING_EXAMPLE.format(
+            width=30000 if units == "mm" else 30,
+            depth=15000 if units == "mm" else 15,
+            height=3000 if units == "mm" else 3,
+            top=9000 if units == "mm" else 9,
+            unit=units,
+        )
         + architect[architect.index("The user now provides") :]
     )
     if units == "m":
