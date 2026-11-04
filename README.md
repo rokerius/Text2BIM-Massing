@@ -71,8 +71,8 @@ python -m build
 
 Проверки: macOS arm64 / Python 3.12.15 и чистый Linux arm64 / Python 3.12.16.
 В Linux контейнер устанавливает пакет в site-packages и выполняет все 97 тестов,
-включая внешний checkout Маслова, подключённый только для чтения. Добавлен CI
-для Ubuntu и Python 3.11–3.13; его удалённый запуск пока не проверен.
+включая внешний checkout Маслова, подключённый только для чтения. CI для Ubuntu и Python 3.11–3.13 также прошёл успешно
+(без внешнего checkout Маслова).
 
 Подготовлен Dockerfile: `docker build -t text2bim-massing .`, затем
 `docker run --rm text2bim-massing`. Образ выполняет тесты без сетевого LLM.
