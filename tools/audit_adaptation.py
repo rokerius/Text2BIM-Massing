@@ -76,6 +76,8 @@ def inventory(root):
         path.relative_to(root).as_posix()
         for path in root.rglob("*")
         if path.is_file()
+        # setuptools adds these two generated metadata files when creating an sdist.
+        and path.relative_to(root).as_posix() not in {"PKG-INFO", "setup.cfg"}
         and not any(
             p in IGNORED_DIRS or p.endswith(".egg-info") for p in path.relative_to(root).parts
         )

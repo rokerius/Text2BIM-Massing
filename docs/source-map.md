@@ -77,3 +77,19 @@ CLI с сохранённой ChatGPT авторизацией. Он получ�
 код standalone runner. `provenance.json` записывает source commits и транспорт;
 default-модель CLI обозначается явно как незафиксированная. CLI дополнительно
 сохраняет входной runner config. Внешний репозиторий не изменяется.
+
+
+## Полный реестр и внешний эксперимент
+
+[Проверяемый реестр](text2bim-diff.md) включает disposition всех 44 исходных
+файлов и 156 declarations выбранных Python-файлов, diff перенесённых функций,
+инструментов, зависимостей и рабочих промптов mm/m. Каждому файлу проекта
+соответствует причина, влияние и проверка в `adaptation-spec.json`.
+`tools/audit_adaptation.py --check` проверяет эту карту и хеши текущего состояния.
+
+`integrations/maslov/` — новый внешний runner/config/README. Точные копии
+трёх файлов добавлены в `experiments/methods/text2bim_adapted/` checkout Маслова.
+Runner импортирует закреплённый пакет и существующие `BuildingFloorCount` и
+`SiteMatch`; ядро пакета и метод Маслова для этого не меняются. Context содержит
+только `id`, `site_contour`, `requirements`. Реестр описывает ограничения
+пилота с одним зданием и явные цели конфига; это не полная benchmark-интеграция.

@@ -24,9 +24,13 @@ ChatGPT и настоящим `BuildingFloorCount` Маслова: цикл ул
 с Linux Codex CLI через ту же подписку. Подтверждены Reviewer-патч,
 выбор оценённого кандидата, вызов Architect и сохранение отверстия.
 
-Исходная проверка в Linux: 81 тест. После сверки отличий — 90 тестов на macOS;
-повторная Linux-проверка описывается в отчёте.
-Интеграция в отдельный эксперимент Маслова остаётся следующим этапом.
+После сверки отличий и добавления внешнего runner все 97 тестов прошли
+на macOS и в чистом Linux-контейнере.
+Добавлен [тонкий runner/config](integrations/maslov/README.md) отдельного
+пилота Маслова: фиксированный commit пакета, модель, исходные метрики и
+submission-формат. На реальном участке 1028279 живой Linux-пилот дал
+`floor_count=2`, `site_match=1`: 3 LLM-вызова и 1 оценка за 88.86 с.
+Поддерживается одна требуемая постройка на задачу.
 Параметризация и NSGA-II остаются во внешнем методе Маслова.
 
 ## Окружение разработки
@@ -54,19 +58,19 @@ python -m pip install -e '.[dev,llm,mesh,maslov]'
 ```bash
 python -m pip check
 python tools/audit_adaptation.py --check
-ruff check src tests examples tools
-ruff format --check src tests examples tools
+ruff check src tests examples tools integrations
+ruff format --check src tests examples tools integrations
 python -m pytest -c pyproject.toml tests -q
 python -m pytest -c pyproject.toml tests -q --maslov-repo /path/to/massing-generation
 python -m build
 ```
 
-Без `--maslov-repo` шесть интеграционных тестов пропускаются. Вместо флага можно
+Без `--maslov-repo` семь интеграционных тестов пропускаются. Вместо флага можно
 задать `MASSING_GENERATION_REPO`. Проверяется точный HEAD и неизменённый `src/`.
 Тесты используют реальные конвертеры, mesh-компилятор, metric и processor Маслова.
 
 Проверки: macOS arm64 / Python 3.12.15 и чистый Linux arm64 / Python 3.12.16.
-В Linux контейнер устанавливает пакет в site-packages и выполняет все 81 тест,
+В Linux контейнер устанавливает пакет в site-packages и выполняет все 97 тестов,
 включая внешний checkout Маслова, подключённый только для чтения. Добавлен CI
 для Ubuntu и Python 3.11–3.13; его удалённый запуск пока не проверен.
 

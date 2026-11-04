@@ -171,6 +171,14 @@ SampleMetric/SampleProcessor передаются извне через явны
 
 Проверка: pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.
 
+### INTEGRATION: Тонкий внешний пилот Маслова
+
+После проверки ядра добавлены отдельные runner/config/README в integrations/maslov и их точные копии в experiments/methods/text2bim_adapted внешнего checkout. Установленный пакет проверяется по Git SHA; core/runtime не изменяется.
+
+Влияние: Каждый sample запускает независимый generate. В контексте только id/site_contour/requirements; target building не передаётся. Поддерживается одно здание; многозданные rows отклоняются. Метрики FloorCount/SiteMatch объединяются в отдельные поля, без score. Два этажа, высота 3 м, модель gpt-6.1-sol и бюджеты — явная конфигурация диагностического пилота. Это ещё не общий benchmark и не новый алгоритм разбиения участка. Выбор assessed candidate и частичные результаты сохраняются.
+
+Проверка: Регрессия IDs/target leakage, неподдерживаемых требований, выбора samples, drift package pin и двух независимых scripted runs с исходными метриками; живой Linux-пилот на реальном участке фиксируется в validation.md.
+
 ## Зависимости
 
 Исходные requirements.txt (UTF-16):

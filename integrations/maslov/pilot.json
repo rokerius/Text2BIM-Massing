@@ -1,0 +1,44 @@
+{
+  "package_commit": "3cbfead4c1b6d538138f36d0a602d79a57c50a3b",
+  "building_id": "generated",
+  "instruction": "Generate one building massing entirely inside site_contour. For this diagnostic pilot use exactly two floors with a 3 m floor height (bottom 0 m, top 6 m). Choose the footprint yourself within the site. site_contour coordinates are in METRES; tool coordinates and elevations are in MILLIMETRES. The external report has floor_count (target 2) and site_match (target 1, the fraction of predicted footprint inside the site). Evaluate and use the actual reports. These are pilot constraints, not dataset benchmark targets. When relaying this task to Programmer, include the complete site_contour coordinates and their units in your answer: Programmer receives only your answer and cannot access the original context.",
+  "llm": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "timeout": 120
+  },
+  "evaluators": [
+    {
+      "kind": "metric",
+      "factory": "src.sample_metric.building_floor_count:BuildingFloorCount",
+      "kwargs": {
+        "building_key": "building",
+        "floor_height": 3.0
+      },
+      "report_key": "floor_count",
+      "layout": "building"
+    },
+    {
+      "kind": "metric",
+      "factory": "src.sample_metric.site_match:SiteMatch",
+      "kwargs": {
+        "pred_col": "pred_massing",
+        "pred_type": "polygon"
+      },
+      "report_key": "site_match",
+      "layout": "buildings",
+      "building_key": "pred_massing"
+    }
+  ],
+  "run": {
+    "max_iterations": 3,
+    "max_llm_calls": 8,
+    "max_evaluations": 4,
+    "max_seconds": 480,
+    "execution_timeout": 10,
+    "evaluation_timeout": 15,
+    "max_repairs": 1,
+    "tool_units": "mm"
+  }
+}

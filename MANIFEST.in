@@ -6,6 +6,7 @@ include .dockerignore
 recursive-include docs *.md
 recursive-include docs *.json
 recursive-include tools *.py
+recursive-include integrations *.py *.json *.md
 include .gitignore
 include .python-version
 recursive-include .github *.yml
