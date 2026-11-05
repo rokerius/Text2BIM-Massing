@@ -63,13 +63,13 @@ Python-файлов, все файлы standalone-проекта, перенес
 
 Полный tree исходного commit сохранён; 11 выбранных файлов скопированы побайтово. Остальные файлы явно исключены по назначению.
 
-Влияние: Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе.
+Влияние: Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе. В документации внешний проект обозначен как massing-generation; технические CLI/extras/пути и исходные сведения об авторстве сохранены. Оформление README и навигации не меняет поведение baseline.
 
 Проверка: Git blob SHA/SHA-256, полный file/declaration inventory, tests/test_sources.py и audit --check.
 
 ### GEOMETRY: Замена Vectorworks геометрией массингов
 
-Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера Маслова сохраняют тела методов. Сцена и инструменты написаны заново.
+Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера massing-generation сохраняют тела методов. Сцена и инструменты написаны заново.
 
 Влияние: Нет стен, окон, дверей, слоёв, IFC или vs.py. Добавлены экструзии, отверстия, компоненты и стабильные ID. Проверка >=3 вершин, finite/valid geometry, положительной высоты и canonical ring order отличаются от GUI; перевода произвольной BIM-сцены нет.
 
@@ -165,15 +165,15 @@ SampleMetric/SampleProcessor передаются извне через явны
 
 ### PACKAGING: Standalone пакет, зависимости и инфраструктура
 
-Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.
+Установочный пакет, Python 3.11–3.13 под контракт massing-generation, CLI, tests, Docker/CI и документация созданы заново.
 
-Влияние: Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.
+Влияние: Shapely/cloudpickle добавлены; extras `maslov` и `mesh` опциональны. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.
 
 Проверка: pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.
 
-### INTEGRATION: Тонкий внешний пилот Маслова
+### INTEGRATION: Тонкий внешний пилот massing-generation
 
-После проверки ядра добавлены отдельные runner/config/README в integrations/maslov и их точные копии в experiments/methods/text2bim_adapted внешнего checkout. Установленный пакет проверяется по Git SHA; core/runtime не изменяется.
+После проверки ядра добавлены отдельные runner/config/README в `integrations/maslov/` и их копии в `experiments/methods/text2bim_adapted/` внешнего checkout. Установленный пакет проверяется по Git SHA; core/runtime не изменяется.
 
 Влияние: Каждый sample запускает независимый generate. В контексте только id/site_contour/requirements; target building не передаётся. Поддерживается одно здание; многозданные rows отклоняются. Метрики FloorCount/SiteMatch объединяются в отдельные поля, без score. Два этажа, высота 3 м, модель gpt-6.1-sol и бюджеты — явная конфигурация диагностического пилота. Это ещё не общий benchmark и не новый алгоритм разбиения участка. Выбор assessed candidate и частичные результаты сохраняются.
 
@@ -189,9 +189,9 @@ SampleMetric/SampleProcessor передаются извне через явны
 
 ### REQUIREMENTS: Реальные требования sample во внешнем runner
 
-Отдельный task_mode requirements формирует задачу по каждому sample. Внешние чистые with_canonical_area/BuildingBrief переиспользуются из закреплённого checkout Маслова, без копирования и запуска алгоритма поиска. Новый requirements.json задаёт четыре исходные метрики; prepare-only сохраняет binding до LLM.
+Отдельный task_mode requirements формирует задачу по каждому sample. Внешние чистые with_canonical_area/BuildingBrief переиспользуются из закреплённого checkout massing-generation, без копирования и запуска алгоритма поиска. Новый requirements.json задаёт четыре исходные метрики; prepare-only сохраняет binding до LLM.
 
-Влияние: Runtime, порядок ролей и исходники Text2BIM не меняются. Одна постройка, сохранение ID, alias usable_area->total_area, явная числовая валидация без скрытых defaults. Нулевые/неизвестные/дробные этажи и неполные цели отклоняются до модели; это ограничение fully-stated subset, а не общий fallback Маслова. Высота и средняя площадь этажа — производные входных данных. Четыре метрики сохраняются раздельно; общей функции score нет. Dataset читается один раз для совпадения SHA и фактического входа. Текущая цель по уточнению пользователя — один массинг; test split и массовая сборка отложены. --sample обозначает единичный вход (--dataset сохранён как алиас).
+Влияние: Runtime, порядок ролей и исходники Text2BIM не меняются. Одна постройка, сохранение ID, alias usable_area->total_area, явная числовая валидация без скрытых defaults. Нулевые/неизвестные/дробные этажи и неполные цели отклоняются до модели; это ограничение fully-stated subset, а не общий fallback massing-generation. Высота и средняя площадь этажа — производные входных данных. Четыре метрики сохраняются раздельно; общей функции score нет. Dataset читается один раз для совпадения SHA и фактического входа. Текущая цель по уточнению пользователя — один массинг; test split и массовая сборка отложены. --sample обозначает единичный вход (--dataset сохранён как алиас).
 
 Проверка: test_maslov_runner.py: валидация чисел, исходный alias helper, отсутствие изменений входа и target leakage, prepare-only без клиента, отказ плохой второй строки до LLM, два разных requirements/бюджета и Reviewer-патч, исходные метрики на отверстиях/компонентах/вертикальном переносе. Живой Linux-запуск реального CoMa sample 1627 фиксируется в validation.md.
 
@@ -1141,7 +1141,7 @@ LLM: извлечён transport; форма API запроса та же, пар
 +    )
 ```
 
-### MASLOV-polygons_to_shapely_converter.py
+### MASSING-GENERATION-polygons_to_shapely_converter.py
 
 Исходный метод без изменений; лишние импорты/база Function удалены.
 
@@ -1149,7 +1149,7 @@ LLM: извлечён transport; форма API запроса та же, пар
 # Без изменений
 ```
 
-### MASLOV-shapely_to_polygons_converter.py
+### MASSING-GENERATION-shapely_to_polygons_converter.py
 
 Исходный метод без изменений; лишние импорты/база Function удалены.
 

@@ -10,7 +10,7 @@ title: ''
 
 ## Как повторить
 
-Commit пакета и Маслова, версия Python/ОС, команда, минимальный task/config.
+Commit пакета и massing-generation, версия Python/ОС, команда, минимальный task/config.
 Для LLM указать provider, модель и версию CLI; ключи и auth.json не прикладывать.
 
 ## Подтверждение

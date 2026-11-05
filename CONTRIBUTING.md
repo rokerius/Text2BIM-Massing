@@ -62,7 +62,7 @@ python examples/scene_without_llm.py > /tmp/text2bim-massing.json
 git diff --check
 ```
 
-С точным внешним checkout Маслова:
+С точным внешним checkout massing-generation:
 
 ```bash
 python -m pytest -c pyproject.toml tests -q \

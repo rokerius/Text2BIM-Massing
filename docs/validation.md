@@ -10,7 +10,7 @@
 | Компонент | Зафиксированная версия |
 | --- | --- |
 | Text2BIM | `b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc`. |
-| Маслов | `607ff1fcf80477787409522d93e18e42ac1436cf`; исходные `src/` проверены без правок. |
+| massing-generation | `607ff1fcf80477787409522d93e18e42ac1436cf`; исходные `src/` проверены без правок. |
 | Агентный цикл до сокращения отличий | Commit `205ed22`; четыре живых сценария macOS/Linux ниже. |
 | Runtime после сокращения отличий | Commit `3cbfead4c1b6d538138f36d0a602d79a57c50a3b`, закреплён в пилоте. |
 | Runner и результаты интеграции | Commit `02a9d71`; последующие правки документации не меняют runtime. |
@@ -27,8 +27,8 @@
 
 | Область | Подтверждённый результат |
 | --- | --- |
-| macOS с checkout Маслова | 128 тестов прошли, включая регрессии атомарности журнала. |
-| Чистый Linux с read-only checkout Маслова | 128 тестов прошли; новый wheel установлен в site-packages. |
+| macOS с checkout massing-generation | 128 тестов прошли, включая регрессии атомарности журнала. |
+| Чистый Linux с read-only checkout massing-generation | 128 тестов прошли; новый wheel установлен в site-packages. |
 | Без внешнего checkout | Двенадцать интеграционных тестов пропускаются; остальные не требуют сетевого LLM. |
 | Происхождение кода | Побайтовая проверка источников/промптов, AST utils/конвертеров, точный перенос интерпретатора с одной оговорённой правкой. |
 | Реестр адаптации | Учёт 44 исходных файлов, 156 объявлений и всех файлов проекта; новый файл или изменение после сверки отклоняются. |
@@ -48,7 +48,7 @@ ID, откат сцены и переменных, тайм-ауты, огран
 Подтверждённый удалённый запуск:
 [GitHub Actions 41928523795](https://github.com/rokerius/Text2BIM-Massing/actions/runs/41928523795)
 для commit `02a9d71a01475d54e0694a77d560fe13571b44a4`.
-В нём checkout Маслова не подключён; внешние интеграционные проверки выполнены
+В нём checkout massing-generation не подключён; внешние интеграционные проверки выполнены
 на macOS и в Docker отдельно. Команды проверки — в
 [CONTRIBUTING](../CONTRIBUTING.md).
 
@@ -86,7 +86,7 @@ Feedback выполняет две успешные попытки кода, cou
 
 Пилот использует контур из
 `experiments/workspace/parametrization/zero_shot/validation/initial_samples/1028279.json`
-checkout Маслова. Эталонное `building` исключено из входа модели.
+checkout massing-generation. Эталонное `building` исключено из входа модели.
 Два этажа, высота этажа 3 м и размещение внутри участка — явно заданные
 диагностические цели, не ответ или требования исходного benchmark-датасета.
 
@@ -140,7 +140,7 @@ Usage CLI включает служебный контекст Codex и може
 
 Общий benchmark, серия реальных участков, многозданные задачи, все девять
 общих метрик и физические оценщики не проверены этим пилотом. Нет результата
-сравнения с методом Маслова или воспроизведения качества исходной статьи.
+сравнения с методом massing-generation или воспроизведения качества исходной статьи.
 Живые вызовы OpenAI API отдельно не выполнялись; тестируется его SDK transport.
 
 Для следующего эксперимента нужны реальные requirements, подключённый
@@ -153,7 +153,7 @@ dataset/split, проверенные общие метрики, закрепл�
 
 Добавлен отдельный режим requirements с исходными FloorCountError,
 UsableAreaError, SiteMatch, IdIoU. Helpers with_canonical_area/BuildingBrief
-импортируются напрямую из закреплённого Маслова; их файлы проверяются на
+импортируются напрямую из закреплённого massing-generation; их файлы проверяются на
 неизменность. Числовые цели берутся из sample, в binding сохраняются raw/effective
 requirements, source paths, формулы и отсутствие defaults.
 
@@ -217,7 +217,7 @@ outside_area_m2=0. Отчёт сохранён как geometry_validation.json.
 скрипте после commit. Сам counterexamples.json автора не был предоставлен;
 примеры реконструированы по описанию и сохранены в test_checkpoints.py.
 
-После фикса прошли 123 теста на macOS и в Linux с точным checkout Маслова.
+После фикса прошли 123 теста на macOS и в Linux с точным checkout massing-generation.
 В Linux новый wheel установлен в site-packages; worker запускается с -I,
 поэтому проверялся именно исправленный установленный runtime. Ruff,
 pip check, wheel/sdist и исходные hashes проходят.
@@ -280,9 +280,9 @@ Enhancer → Programmer → Reviewer → Programmer → Reviewer. Расход �
 | Неперехваченный overflow в отдельном Reviewer-патче | execution_failed; принятая сцена/variables первого скрипта и прежний report сохранены, новых оценок нет. |
 | Прежние checkpoint/workflow/rollback/repair регрессии | Проходят в полном наборе; late variables, старая ветка и pure-variable update не потеряны. |
 
-Полный pytest с точным checkout Маслова: **128 passed** на macOS за 18.75 с
+Полный pytest с точным checkout massing-generation: **128 passed** на macOS за 18.75 с
 и **128 passed** в Linux-контейнере за 18.14 с. Linux использует новый wheel
-из site-packages; проект и checkout Маслова смонтированы read-only.
+из site-packages; проект и checkout massing-generation смонтированы read-only.
 Ruff check и format проходят (36 файлов), аудит — 100 файлов проекта,
 44 исходных файла Text2BIM; pip check и сборка wheel/sdist проходят.
 

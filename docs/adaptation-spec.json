@@ -6,13 +6,13 @@
       "id": "SOURCES",
       "title": "Фиксация полного источника",
       "reason": "Полный tree исходного commit сохранён; 11 выбранных файлов скопированы побайтово. Остальные файлы явно исключены по назначению.",
-      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе.",
+      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе. В документации внешний проект обозначен как massing-generation; технические CLI/extras/пути и исходные сведения об авторстве сохранены. Оформление README и навигации не меняет поведение baseline.",
       "verification": "Git blob SHA/SHA-256, полный file/declaration inventory, tests/test_sources.py и audit --check."
     },
     {
       "id": "GEOMETRY",
       "title": "Замена Vectorworks геометрией массингов",
-      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера Маслова сохраняют тела методов. Сцена и инструменты написаны заново.",
+      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера massing-generation сохраняют тела методов. Сцена и инструменты написаны заново.",
       "method_effect": "Нет стен, окон, дверей, слоёв, IFC или vs.py. Добавлены экструзии, отверстия, компоненты и стабильные ID. Проверка >=3 вершин, finite/valid geometry, положительной высоты и canonical ring order отличаются от GUI; перевода произвольной BIM-сцены нет.",
       "verification": "Дифф конвертеров, геометрические тесты, исходный MassingMeshCompiler."
     },
@@ -96,14 +96,14 @@
     {
       "id": "PACKAGING",
       "title": "Standalone пакет, зависимости и инфраструктура",
-      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
-      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт massing-generation, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; extras `maslov` и `mesh` опциональны. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
       "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux."
     },
     {
       "id": "INTEGRATION",
-      "title": "Тонкий внешний пилот Маслова",
-      "reason": "После проверки ядра добавлены отдельные runner/config/README в integrations/maslov и их точные копии в experiments/methods/text2bim_adapted внешнего checkout. Установленный пакет проверяется по Git SHA; core/runtime не изменяется.",
+      "title": "Тонкий внешний пилот massing-generation",
+      "reason": "После проверки ядра добавлены отдельные runner/config/README в `integrations/maslov/` и их копии в `experiments/methods/text2bim_adapted/` внешнего checkout. Установленный пакет проверяется по Git SHA; core/runtime не изменяется.",
       "method_effect": "Каждый sample запускает независимый generate. В контексте только id/site_contour/requirements; target building не передаётся. Поддерживается одно здание; многозданные rows отклоняются. Метрики FloorCount/SiteMatch объединяются в отдельные поля, без score. Два этажа, высота 3 м, модель gpt-6.1-sol и бюджеты — явная конфигурация диагностического пилота. Это ещё не общий benchmark и не новый алгоритм разбиения участка. Выбор assessed candidate и частичные результаты сохраняются.",
       "verification": "Регрессия IDs/target leakage, неподдерживаемых требований, выбора samples, drift package pin и двух независимых scripted runs с исходными метриками; живой Linux-пилот на реальном участке фиксируется в validation.md."
     },
@@ -117,8 +117,8 @@
     {
       "id": "REQUIREMENTS",
       "title": "Реальные требования sample во внешнем runner",
-      "reason": "Отдельный task_mode requirements формирует задачу по каждому sample. Внешние чистые with_canonical_area/BuildingBrief переиспользуются из закреплённого checkout Маслова, без копирования и запуска алгоритма поиска. Новый requirements.json задаёт четыре исходные метрики; prepare-only сохраняет binding до LLM.",
-      "method_effect": "Runtime, порядок ролей и исходники Text2BIM не меняются. Одна постройка, сохранение ID, alias usable_area->total_area, явная числовая валидация без скрытых defaults. Нулевые/неизвестные/дробные этажи и неполные цели отклоняются до модели; это ограничение fully-stated subset, а не общий fallback Маслова. Высота и средняя площадь этажа — производные входных данных. Четыре метрики сохраняются раздельно; общей функции score нет. Dataset читается один раз для совпадения SHA и фактического входа. Текущая цель по уточнению пользователя — один массинг; test split и массовая сборка отложены. --sample обозначает единичный вход (--dataset сохранён как алиас).",
+      "reason": "Отдельный task_mode requirements формирует задачу по каждому sample. Внешние чистые with_canonical_area/BuildingBrief переиспользуются из закреплённого checkout massing-generation, без копирования и запуска алгоритма поиска. Новый requirements.json задаёт четыре исходные метрики; prepare-only сохраняет binding до LLM.",
+      "method_effect": "Runtime, порядок ролей и исходники Text2BIM не меняются. Одна постройка, сохранение ID, alias usable_area->total_area, явная числовая валидация без скрытых defaults. Нулевые/неизвестные/дробные этажи и неполные цели отклоняются до модели; это ограничение fully-stated subset, а не общий fallback massing-generation. Высота и средняя площадь этажа — производные входных данных. Четыре метрики сохраняются раздельно; общей функции score нет. Dataset читается один раз для совпадения SHA и фактического входа. Текущая цель по уточнению пользователя — один массинг; test split и массовая сборка отложены. --sample обозначает единичный вход (--dataset сохранён как алиас).",
       "verification": "test_maslov_runner.py: валидация чисел, исходный alias helper, отсутствие изменений входа и target leakage, prepare-only без клиента, отказ плохой второй строки до LLM, два разных requirements/бюджета и Reviewer-патч, исходные метрики на отверстиях/компонентах/вертикальном переносе. Живой Linux-запуск реального CoMa sample 1627 фиксируется в validation.md."
     },
     {
@@ -133,8 +133,8 @@
     {
       "change_id": "PACKAGING",
       "kind": "new-infrastructure",
-      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
-      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт massing-generation, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; extras `maslov` и `mesh` опциональны. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
       "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
       "paths": [
         ".dockerignore",
@@ -173,8 +173,8 @@
     {
       "change_id": "PACKAGING",
       "kind": "new",
-      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
-      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт massing-generation, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; extras `maslov` и `mesh` опциональны. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
       "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
       "paths": [
         "src/text2bim_massing/__init__.py",
@@ -196,8 +196,8 @@
     {
       "change_id": "PACKAGING",
       "kind": "new-namespace",
-      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
-      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт massing-generation, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; extras `maslov` и `mesh` опциональны. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
       "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
       "paths": [
         "src/text2bim_massing/_vendor/__init__.py",
@@ -208,7 +208,7 @@
     {
       "change_id": "GEOMETRY",
       "kind": "preserved-methods",
-      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера Маслова сохраняют тела методов. Сцена и инструменты написаны заново.",
+      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера massing-generation сохраняют тела методов. Сцена и инструменты написаны заново.",
       "method_effect": "Нет стен, окон, дверей, слоёв, IFC или vs.py. Добавлены экструзии, отверстия, компоненты и стабильные ID. Проверка >=3 вершин, finite/valid geometry, положительной высоты и canonical ring order отличаются от GUI; перевода произвольной BIM-сцены нет.",
       "verification": "Дифф конвертеров, геометрические тесты, исходный MassingMeshCompiler.",
       "paths": [
@@ -307,7 +307,7 @@
     {
       "change_id": "GEOMETRY",
       "kind": "new",
-      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера Маслова сохраняют тела методов. Сцена и инструменты написаны заново.",
+      "reason": "Vectorworks/Solibri отсутствуют в standalone Linux контракте. Два конвертера massing-generation сохраняют тела методов. Сцена и инструменты написаны заново.",
       "method_effect": "Нет стен, окон, дверей, слоёв, IFC или vs.py. Добавлены экструзии, отверстия, компоненты и стабильные ID. Проверка >=3 вершин, finite/valid geometry, положительной высоты и canonical ring order отличаются от GUI; перевода произвольной BIM-сцены нет.",
       "verification": "Дифф конвертеров, геометрические тесты, исходный MassingMeshCompiler.",
       "paths": [
@@ -358,8 +358,8 @@
     {
       "change_id": "PACKAGING",
       "kind": "new-tests",
-      "reason": "Установочный пакет, Python 3.11–3.13 под контракт Маслова, CLI, tests, Docker/CI и документация созданы заново.",
-      "method_effect": "Shapely/cloudpickle добавлены; maslov/mesh extras optional. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
+      "reason": "Установочный пакет, Python 3.11–3.13 под контракт massing-generation, CLI, tests, Docker/CI и документация созданы заново.",
+      "method_effect": "Shapely/cloudpickle добавлены; extras `maslov` и `mesh` опциональны. Transformers, multimodal/BIM/GUI/other-provider dependencies не подключаются. Нет NSGA-II или параметризации нашего метода в Text2BIM.",
       "verification": "pyproject.toml/requirements-dev.txt, wheel/sdist/core-only smoke и Docker/Linux.",
       "paths": [
         "tests/conftest.py",
@@ -1420,7 +1420,7 @@
       "target_assignment": "input_review_result"
     },
     {
-      "id": "MASLOV-polygons_to_shapely_converter.py",
+      "id": "MASSING-GENERATION-polygons_to_shapely_converter.py",
       "project": "maslov",
       "source": "src/polygons_to_shapely_converter.py",
       "target": "src/text2bim_massing/_vendor/maslov/polygons_to_shapely_converter.py",
@@ -1430,7 +1430,7 @@
       "reason": "Исходный метод без изменений; лишние импорты/база Function удалены."
     },
     {
-      "id": "MASLOV-shapely_to_polygons_converter.py",
+      "id": "MASSING-GENERATION-shapely_to_polygons_converter.py",
       "project": "maslov",
       "source": "src/shapely_to_polygons_converter.py",
       "target": "src/text2bim_massing/_vendor/maslov/shapely_to_polygons_converter.py",

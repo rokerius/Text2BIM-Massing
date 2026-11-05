@@ -5,7 +5,7 @@
 [validation.md](validation.md). Эта карта отвечает за происхождение кода.
 
 Text2BIM: `b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc`.
-Маслов: `607ff1fcf80477787409522d93e18e42ac1436cf`.
+massing-generation: `607ff1fcf80477787409522d93e18e42ac1436cf`.
 
 Оригиналы выбранных файлов сохраняются в `upstream/<project>/`. Их Git blob SHA
 и SHA-256 перечислены в `manifest.json` и проверяются тестом. Эти каталоги
@@ -22,12 +22,12 @@ Text2BIM: `b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc`.
 | `tool_agent/multi_agents_workflow.py`: `run_po_coder_agents`, `run_agent_checking_loop` | `workflow.py` | Сохранены PO→Programmer и Reviewer→исполняемый патч, включая структуру исходного patch request. IFC/Solibri, frontend и глобальные пути заменены immutable архивом и внешним evaluator. Reviewer возвращает JSON-решение с ID оценённого кандидата; ядро не выводит score из отчёта. |
 | Четыре файла `tool_agent/muti_agent_prompt/*.txt` | `_vendor/text2bim/prompts/` + `prompts.py` | Оригинальные ресурсы не меняются. `prompts.py` заменяет Vectorworks, исправляет имя plan_designer, уточняет ограничения исполнения и snapshot/evaluate/select. У Architect сохранены роль и вставка задачи, BIM checklist/few-shot заменены инструкциями о контурах и экструзиях. Reviewer получает JSON-отчёт и формат выбора кандидата. Все рабочие промпты сохраняются в запуске. |
 | `tool_agent/vw_tools_extend.py`: `CreatePolygon`, `GetPolygonVertex`, `GetVertNum`, `Move`, `DeleteTool`, `DuplicateObj`, `RotateObj` | `src/text2bim_massing/tools.py` | Сохранены имена функций инструментов и смысл общих операций. Их реализации новые: `vs`, слои и наследование `transformers.Tool` заменены вызовами `Scene`. У `create_polygon`/`duplicate_obj` убран `layer_uuid`; добавлены инструменты массингов и чтения состояния. |
-| `requirements.txt` | `pyproject.toml` | Из исходных провайдеров подключён один OpenAI SDK исходной версии 1.82.0. SDK Mistral/Anthropic/Google, transformers 4.30.2, ptvsd, python-dotenv, pillow, ifcopenshell пока не подключаются. API-ключ читается из окружения. Геометрия добавляет Shapely; mesh-extra согласован с зависимостями Маслова. |
+| `requirements.txt` | `pyproject.toml` | Из исходных провайдеров подключён один OpenAI SDK исходной версии 1.82.0. SDK Mistral/Anthropic/Google, transformers 4.30.2, ptvsd, python-dotenv, pillow, ifcopenshell пока не подключаются. API-ключ читается из окружения. Геометрия добавляет Shapely; mesh-extra согласован с зависимостями massing-generation. |
 
 Стены, окна, двери, кровли, IFC-экспорт, GUI и Solibri не переносились: они не
 входят в контракт массингов. Оригинальный `vs.py` не используется.
 
-## Маслов
+## massing-generation
 
 | Исходный фрагмент | Рабочее место | Изменения и статус |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ Text2BIM: `b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc`.
 | `SampleMetric` и `SampleProcessor` | `adapters.SampleMetricAdapter`, `SampleProcessorAdapter` | Компонент передаётся извне. Вложенность выбирается явно: `extrusions`, `building`, `buildings`. Отчёт не агрегируется в score; поля процессора задаются явно. |
 
 Валидация входа и канонизация представления в `geometry.py` — новый код.
-Валидные кольца обрабатываются исходной семантикой Маслова: вложенное кольцо
+Валидные кольца обрабатываются исходной семантикой massing-generation: вложенное кольцо
 вычитается, остальные объединяются. Канонизация меняет порядок/ориентацию
 вершин, но проверяет топологическое равенство формы после обратного преобразования.
 Кольца выдаются по убыванию площади, чтобы внешнее кольцо и его отверстие
@@ -92,9 +92,9 @@ default-модель CLI обозначается явно как незафик
 `tools/audit_adaptation.py --check` проверяет эту карту и хеши текущего состояния.
 
 `integrations/maslov/` — новый внешний runner/config/README. Точные копии
-трёх файлов добавлены в `experiments/methods/text2bim_adapted/` checkout Маслова.
+трёх файлов добавлены в `experiments/methods/text2bim_adapted/` checkout massing-generation.
 Runner импортирует закреплённый пакет и существующие `BuildingFloorCount` и
-`SiteMatch`; ядро пакета и метод Маслова для этого не меняются. Context содержит
+`SiteMatch`; ядро пакета и метод massing-generation для этого не меняются. Context содержит
 только `id`, `site_contour`, `requirements`. Реестр описывает ограничения
 пилота с одним зданием и явные цели конфига; это не полная benchmark-интеграция.
 

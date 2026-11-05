@@ -1,9 +1,13 @@
-# Отдельные эксперименты Маслова
+# Интеграция с massing-generation
 
-Тонкий runner вокруг `generate`: режимы `pilot` и `requirements`, исходные оценщики, независимые задачи,
-закреплённая версия пакета и output в формате `pred_massing`.
-Поддерживается одно требуемое здание на sample. Общий launcher Маслова,
-параметризация и NSGA-II не меняются.
+Отдельный runner вокруг `generate`: входной sample, исходные оценщики,
+закреплённая версия пакета и результат в формате `pred_massing`.
+Поддерживается одно требуемое здание на sample.
+
+> **Готово:** отдельный запуск, режимы `pilot` и `requirements`, сохранение
+> метрик, расходов и provenance. Подключение к общему launcher — следующий этап.
+
+[Установка](#установка) · [Запуск](#запуск) · [Реальные требования](requirements.md) · [Результаты проверок](../../docs/validation.md)
 
 ## Статус и версии
 
@@ -19,10 +23,10 @@
 исходный mesh-компилятор дал замкнутую mesh 3360 м³. Первая попытка была
 неудачной; обе описаны в [отчёте standalone-проекта](https://github.com/rokerius/Text2BIM-Massing/blob/main/docs/validation.md).
 
-Runner, оба конфига и README скопированы в локальный
-`massing-generation/experiments/methods/text2bim_adapted/`. Commit/PR в целевую
-ветку Маслова ещё не зафиксирован. Каноническая версионируемая копия находится
-в `integrations/maslov/` этого репозитория.
+Канонические runner, конфиги и руководства версионируются в `integrations/maslov/`
+этого репозитория. Заготовка есть в локальном
+`massing-generation/experiments/methods/text2bim_adapted/`; её нужно обновить
+актуальными файлами перед переносом. Commit/PR в целевую ветку ещё не оформлен.
 
 ## Установка
 
@@ -59,7 +63,7 @@ python -m pip install --force-reinstall --no-deps \
 ```
 
 Либо скопировать `run.py`, `pilot.json`, `requirements.json`, `README.md` без правок в отдельную
-папку эксперимента и запускать из checkout Маслова:
+папку эксперимента и запускать из checkout massing-generation:
 
 ```bash
 /tmp/text2bim-pilot-env/bin/python experiments/methods/text2bim_adapted/run.py \
@@ -90,7 +94,7 @@ python -m pip install --force-reinstall --no-deps \
 | `report.json` | Статус, reason, candidate ID, отдельные метрики, расходы и путь к артефактам каждой задачи. |
 | `result.json` | Число задач, обработанных, завершённых и имеющих выбор; агрегация метрик отсутствует. |
 | `tasks/<index>/` | Полные независимые результаты `generate`, архив и история. |
-| `runner_config.json`, `experiment_provenance.json` | Конфиг, package/Maslov commits, SHA dataset и runner, выбранные IDs. |
+| `runner_config.json`, `experiment_provenance.json` | Конфиг, commits пакета и massing-generation, SHA dataset и runner, выбранные IDs. |
 
 Выход обновляется после каждого sample, включая частичные результаты.
 Код 0 — все задачи completed, 2 — есть незавершённые; конфигурационные ошибки
@@ -112,3 +116,18 @@ FloorCount/SiteMatch не заменяют полный benchmark с общим�
 Текущий pin включает исправление checkpoints. Исторические результаты 1028279
 и 1627 в отчёте относятся к предыдущему runtime; новый replay-экспорт описан
 в [checkpoints](https://github.com/rokerius/Text2BIM-Massing/blob/main/docs/checkpoints.md).
+
+## Подключение к общему запуску
+
+Для отдельного запуска на закреплённом checkout runner готов. Для включения
+в основной проект остаются три задачи:
+
+1. Перенести актуальные runner, конфиги и руководства в каталог эксперимента.
+2. Добавить метод в `experiments/launcher.py`: сейчас он выбирает только
+   subtractive и vLLM.
+3. Адаптировать проверку совместимости исходников: текущий runner требует
+   точный HEAD `607ff1f`, который изменится после commit интеграции.
+   Проверка используемых компонентов и запись provenance должны сохраниться.
+
+Параметризация, NSGA-II, общие метрики и правила сравнения относятся к внешнему
+проекту. Этот runner передаёт требования, вызывает baseline и сохраняет результат.
