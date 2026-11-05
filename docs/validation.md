@@ -234,3 +234,27 @@ Replay не выполняет LLM/evaluator, а прежние report/геом�
 свою версию и исходные значения; они не объявляются недействительными по одному
 лишь несовпадению source с геометрией. Живая проверка нового feedback-примера
 фиксируется отдельно после выполнения.
+
+
+Живая Linux-проверка исправленного runtime `62162651ce3bdd2d7ed0a9373ef6a392c4642a36`:
+`examples/checkpoint_feedback_task.json`, gpt-6.1-sol, reasoning low,
+Codex CLI 0.164.0 через подписку, исходный BuildingFloorCount (3 м на этаж).
+Первый скрипт построил 3 м, commit/evaluate/select, затем определил
+remembered_solid и tuple heights_to_apply. Следующий отдельный Reviewer-патч
+использовал обе переменные и изменил тот же solid до 6 м.
+
+Результат completed, выбран оценённый c0002, floor_count=2. Путь ролей
+Enhancer → Programmer → Reviewer → Programmer → Reviewer. Расход —
+5 LLM-вызовов, 2 оценки, 2 попытки кода, 68.30 с;
+80 454 input / 1 154 output токенов, денежная стоимость null.
+
+После запуска оба code.py и selected_code.py исполнены обычным Python:
+геометрия и IDs совпали с snapshots, восстановленные tuple/alias доступны.
+Проверено по AST, что variables первого скрипта определены после commit,
+а следующий патч их читает. Replay не добавил LLM/оценок. Report c0001
+остался floor_count=1, report c0002 — 2.
+
+Локальные артефакты: `runs/checkpoint-linux-feedback-20261105-01/`, включая
+`checkpoint_verification.json`. Это регрессия согласованности и продолжения
+одиночного запуска, без оценки частоты старого дефекта или сравнения качества
+методов. Общие метрики и протокол будущего benchmark не менялись.

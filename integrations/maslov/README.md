@@ -9,7 +9,7 @@
 
 | Компонент | Версия |
 | --- | --- |
-| Runtime Text2BIM-Massing | `3cbfead4c1b6d538138f36d0a602d79a57c50a3b` |
+| Runtime Text2BIM-Massing | `62162651ce3bdd2d7ed0a9373ef6a392c4642a36` |
 | massing-generation | `607ff1fcf80477787409522d93e18e42ac1436cf`, неизменённый `src/` |
 | Модель пилота | `gpt-6.1-sol`, reasoning `low`, Codex CLI 0.164.0 через ChatGPT login |
 | Конфиг | `pilot.json`: цели, metric factories, модель и бюджеты |
@@ -31,7 +31,7 @@ Runner, оба конфига и README скопированы в локальн
 ```bash
 python3.12 -m venv /tmp/text2bim-pilot-env
 /tmp/text2bim-pilot-env/bin/pip install \
-  'text2bim-massing[llm,maslov,mesh] @ git+https://github.com/rokerius/Text2BIM-Massing.git@3cbfead4c1b6d538138f36d0a602d79a57c50a3b'
+  'text2bim-massing[llm,maslov,mesh] @ git+https://github.com/rokerius/Text2BIM-Massing.git@62162651ce3bdd2d7ed0a9373ef6a392c4642a36'
 ```
 
 Нужен установленный Codex CLI с ChatGPT login. Также принимается editable
@@ -44,7 +44,7 @@ checkout пакета, если `src/` и `pyproject.toml` совпадают с
 
 ```bash
 python -m pip install --force-reinstall --no-deps \
-  'text2bim-massing @ git+https://github.com/rokerius/Text2BIM-Massing.git@3cbfead4c1b6d538138f36d0a602d79a57c50a3b'
+  'text2bim-massing @ git+https://github.com/rokerius/Text2BIM-Massing.git@62162651ce3bdd2d7ed0a9373ef6a392c4642a36'
 ```
 
 ## Запуск
@@ -108,3 +108,7 @@ requirements добавлены `requirements.json` и адаптер полны
 FloorCount/SiteMatch не заменяют полный benchmark с общими девятью метриками.
 Общий датасет, серия участков и сравнительный отчёт — оставшаяся работа.
 Текущие возможности и план доступны из [README standalone-проекта](https://github.com/rokerius/Text2BIM-Massing).
+
+Текущий pin включает исправление checkpoints. Исторические результаты 1028279
+и 1627 в отчёте относятся к предыдущему runtime; новый replay-экспорт описан
+в [checkpoints](https://github.com/rokerius/Text2BIM-Massing/blob/main/docs/checkpoints.md).
