@@ -200,3 +200,120 @@ def test_replay_rejects_a_journal_that_does_not_match_its_snapshot(tmp_path):
     (tmp_path / "corrupt.json").write_text(json.dumps(data))
     with pytest.raises(ValueError, match="does not match"):
         replay_checkpoint(tmp_path / "corrupt.json")
+
+
+CAUGHT_OVERFLOW = """```python
+p=create_polygon([(0,0),(1000,0),(1000,1000),(0,1000)])
+s=create_extrusion(p,0,3000)
+for i in range(50):
+    try:
+        move_obj(s,xDistance=1)
+    except:
+        break
+candidate_id=commit_candidate()
+report=evaluate(candidate_id)
+select_candidate(candidate_id)
+```"""
+
+
+@pytest.mark.parametrize("max_state_bytes", [2000, RunConfig().max_state_bytes])
+def test_caught_journal_overflow_preserves_replayable_checkpoint(tmp_path, max_state_bytes):
+    result = generate(
+        "Build",
+        report,
+        ScriptedLLM(["Build", CAUGHT_OVERFLOW, decision(guidance="done")]),
+        RunConfig(max_state_bytes=max_state_bytes, max_repairs=0),
+        tmp_path,
+    )
+    assert result.status == "completed", result.reason
+    assert result.costs["evaluations"] == 1
+    assert result.costs["execution_attempts"] == 1
+    assert len(result.candidates) == 1
+    assert result.selected_candidate["report"] == {"height": 3}
+    data = json.loads((tmp_path / "checkpoint.json").read_text())
+    moves = len(data["actions"]) - 2
+    assert data["snapshot"]["revision"] == len(data["actions"])
+    if max_state_bytes == 2000:
+        assert 0 < moves < 50
+    else:
+        assert moves == 50
+    checkpoint = replay_checkpoint(tmp_path / "checkpoint.json")
+    assert checkpoint.scene.get(checkpoint.state["s"])["polygons"][0][0][0] == pytest.approx(
+        moves / 1000
+    )
+    verify_archive(tmp_path)
+    process = subprocess.run(
+        [sys.executable, str(tmp_path / "selected_code.py")],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert json.loads(process.stdout) == result.selected_candidate["massing"]
+
+
+def test_caught_allocation_overflow_allows_a_smaller_operation(tmp_path):
+    code = """```python
+p=create_polygon([(0,0),(1000,0),(1000,1000),(0,1000)])
+s=create_extrusion(p,0,3000)
+try:
+    duplicate_obj(s,n=100)
+except:
+    pass
+move_obj(s,xDistance=1)
+candidate_id=commit_candidate()
+report=evaluate(candidate_id)
+select_candidate(candidate_id)
+```"""
+    result = generate(
+        "Build",
+        report,
+        ScriptedLLM(["Build", code, decision()]),
+        RunConfig(max_state_bytes=2000, max_repairs=0),
+        tmp_path,
+    )
+    assert result.status == "completed", result.reason
+    assert result.costs["evaluations"] == 1
+    data = json.loads((tmp_path / "checkpoint.json").read_text())
+    assert data["snapshot"]["revision"] == 3
+    assert len(data["snapshot"]["objects"]) == 2
+    assert [action["name"] for action in data["actions"]] == [
+        "create_polygon",
+        "create_extrusion",
+        "move_obj",
+    ]
+    assert [object_id for action in data["actions"] for object_id in action["ids"]] == [
+        obj["id"] for obj in data["snapshot"]["objects"]
+    ]
+    verify_archive(tmp_path)
+
+
+@pytest.mark.parametrize("in_patch", [False, True])
+def test_uncaught_journal_overflow_rolls_back_attempt_and_keeps_evaluated_checkpoint(
+    tmp_path, in_patch
+):
+    overflow = "for i in range(50):\n    move_obj(s,xDistance=1)"
+    if in_patch:
+        replies = ["Build", BUILD, decision("improve"), f"```python\n{overflow}\n```"]
+    else:
+        replies = ["Build", BUILD.rsplit("```", 1)[0] + overflow + "\n```"]
+    result = generate(
+        "Build",
+        report,
+        ScriptedLLM(replies),
+        RunConfig(max_state_bytes=2000, max_repairs=0),
+        tmp_path,
+    )
+    assert result.status == "execution_failed"
+    assert "Checkpoint operation journal exceeds size limit" in result.reason
+    assert result.costs["evaluations"] == 1
+    assert result.costs["execution_attempts"] == (2 if in_patch else 1)
+    assert len(result.candidates) == 1
+    assert result.selected_candidate["report"] == {"height": 3}
+    checkpoint = replay_checkpoint(tmp_path / "checkpoint.json")
+    assert checkpoint.scene.to_massing() == result.selected_candidate["massing"]
+    assert "i" not in checkpoint.state
+    assert json.loads((tmp_path / "candidates/c0001/report.json").read_text()) == {"height": 3}
+    accepted_scene = json.loads((tmp_path / "scene.json").read_text())
+    expected_scene = checkpoint.scene.snapshot() if in_patch else Scene().snapshot()
+    assert accepted_scene == expected_scene.to_dict()
+    verify_archive(tmp_path)

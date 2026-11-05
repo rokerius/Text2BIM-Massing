@@ -135,22 +135,32 @@ def main():
             def call(*args, **kwargs):
                 nonlocal action_bytes
                 start = len(allocated_ids)
+                journal_start, previous_bytes = len(actions), action_bytes
                 revision = scene._revision
                 arguments, keywords = encode_state(args), encode_state(kwargs)
-                result = function(*args, **kwargs)
-                if scene._revision == revision:
-                    return result
-                action = {
-                    "name": name,
-                    "args": arguments,
-                    "kwargs": keywords,
-                    "ids": allocated_ids[start:],
-                }
-                action_bytes += len(json.dumps(action, allow_nan=False).encode())
-                if action_bytes > request["max_state_bytes"]:
-                    raise ValueError("Checkpoint operation journal exceeds size limit")
-                actions.append(action)
-                return result
+                try:
+                    # A caught journal failure must leave no unrecorded scene mutation.
+                    with scene.transaction():
+                        result = function(*args, **kwargs)
+                        if scene._revision == revision:
+                            return result
+                        action = {
+                            "name": name,
+                            "args": arguments,
+                            "kwargs": keywords,
+                            "ids": allocated_ids[start:],
+                        }
+                        size = len(json.dumps(action, allow_nan=False).encode())
+                        if action_bytes + size > request["max_state_bytes"]:
+                            raise ValueError("Checkpoint operation journal exceeds size limit")
+                        actions.append(action)
+                        action_bytes += size
+                        return result
+                except BaseException:
+                    del allocated_ids[start:]
+                    del actions[journal_start:]
+                    action_bytes = previous_bytes
+                    raise
 
             return call
 

@@ -17,7 +17,7 @@
 | Кандидаты | Неизменяемые snapshots/reports; согласованный журнал/IDs/state, поздние variables при совпадающей сцене, отдельные replay и source. | `test_workflow.py`, выбор предыдущего кандидата и отсутствие stale report. |
 | API, CLI и бюджеты | Конфигурация, статусы, лимиты LLM/оценок/времени/исправлений, история, расходы и частичные результаты. | `test_workflow.py`, `test_cli_codex.py`, реальные CLI-запуски. |
 | LLM-транспорты | OpenAI Chat Completions SDK 1.82.0; Codex CLI через ChatGPT login. | SDK проверен локальным HTTP transport; живые обращения выполнены через Codex. |
-| Linux и упаковка | Устанавливаемый wheel, sdist с исходниками и аудитом, Dockerfile, CI Python 3.11–3.13. | Сборка, core-only smoke, 123 теста в Linux, GitHub Actions. |
+| Linux и упаковка | Устанавливаемый wheel, sdist с исходниками и аудитом, Dockerfile, CI Python 3.11–3.13. | Сборка, core-only smoke, 128 тестов в Linux, GitHub Actions. |
 | Эксперимент Маслова | Отдельный runner, pin пакета, pilot/requirements режимы, исходная нормализация площади и четыре метрики, подготовка без LLM и provenance каждой цели. | `test_maslov_runner.py`, живые Linux-пилоты 1028279 и requirements 1627. |
 | Полнота учёта | Все 44 исходных файла, 156 объявлений выбранных Python-файлов и все файлы проекта описаны; хеши и diff проверяются CI. | `tools/audit_adaptation.py`, `test_adaptation_audit.py`. |
 
@@ -36,6 +36,14 @@
 экспорта — в [checkpoints.md](checkpoints.md). На исправленном runtime
 живой Linux-цикл 1→2 этажа использовал variables после commit: 5 LLM-вызовов,
 2 оценки, 68.30 с. Экспорт обоих кандидатов воспроизвёл snapshots и IDs.
+
+Дополнительно исправлен P2 из повторного ревью `e94f895`: перехваченный overflow
+журнала теперь полностью откатывает операцию до commit, включая revision,
+выделенные IDs и учёт байтов. Точный пример с лимитом 2000 даёт completed,
+одну оценку и 11 операций при revision 11; native replay проходит. С обычным
+лимитом выполняются все 50 переносов. Необработанный overflow откатывает
+попытку, сохраняя оценённые checkpoints/отчёты. Пройдены 128 детерминированных
+тестов на macOS и Linux; новый live LLM для этого исправления не запускался.
 
 ## Что показали живые проверки
 
