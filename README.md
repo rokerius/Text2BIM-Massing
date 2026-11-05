@@ -128,7 +128,7 @@ python -m text2bim_massing generate \
 отклоняются. Подготовка через `--prepare-only` не вызывает LLM.
 
 Общий launcher, несколько требуемых зданий, массовые прогоны и сравнительный
-протокол остаются в [плане следующего этапа](Text2BIM-Massing-implementation-plan.md).
+протокол относятся к [следующему этапу](docs/status.md#следующий-этап).
 Параметризация и NSGA-II принадлежат внешнему методу и в baseline не включены.
 
 `completed` означает решение Reviewer завершить запуск; выполнение требований
@@ -143,4 +143,4 @@ python -m text2bim_massing generate \
 | [Интеграция с massing-generation](integrations/maslov/README.md) | [Контракт checkpoints](docs/checkpoints.md) | [Реестр отличий от Text2BIM](docs/text2bim-diff.md) |
 | [Разработка и проверки](CONTRIBUTING.md) | [Текущий статус](docs/status.md) | [Источники и лицензии](THIRD_PARTY_NOTICES.md) |
 
-[Все документы](docs/README.md) · [План развития](Text2BIM-Massing-implementation-plan.md) · [История изменений](CHANGELOG.md)
+[Все документы](docs/README.md) · [Следующий этап](docs/status.md#следующий-этап) · [История адаптации](docs/text2bim-adaptation.md)

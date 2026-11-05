@@ -6,7 +6,7 @@
       "id": "SOURCES",
       "title": "Фиксация полного источника",
       "reason": "Полный tree исходного commit сохранён; 11 выбранных файлов скопированы побайтово. Остальные файлы явно исключены по назначению.",
-      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе. В документации внешний проект обозначен как massing-generation; технические CLI/extras/пути и исходные сведения об авторстве сохранены. Оформление README и навигации не меняет поведение baseline.",
+      "method_effect": "Содержимое оригиналов не меняется. Это bounded audit перенесённого baseline, не утверждение эквивалентности всей GUI-системе. В документации внешний проект обозначен как massing-generation; технические CLI/extras/пути и исходные сведения об авторстве сохранены. Оформление README и навигации не меняет поведение baseline. Рабочие планы вынесены в игнорируемую .local/; дублирующий CHANGELOG удалён. Публичные инструкции опираются на status и журнал адаптации; план и CHANGELOG исключены из sdist.",
       "verification": "Git blob SHA/SHA-256, полный file/declaration inventory, tests/test_sources.py и audit --check."
     },
     {
@@ -145,7 +145,6 @@
         "MANIFEST.in",
         "README.md",
         "THIRD_PARTY_NOTICES.md",
-        "Text2BIM-Massing-implementation-plan.md",
         "examples/codex_maslov.json",
         "examples/courtyard_task.json",
         "examples/feedback_task.json",
@@ -418,7 +417,6 @@
         ".gitattributes",
         ".github/pull_request_template.md",
         ".github/ISSUE_TEMPLATE/bug_report.md",
-        "CHANGELOG.md",
         "CONTRIBUTING.md",
         "docs/README.md",
         "docs/status.md",
