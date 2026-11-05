@@ -195,6 +195,14 @@ SampleMetric/SampleProcessor передаются извне через явны
 
 Проверка: test_maslov_runner.py: валидация чисел, исходный alias helper, отсутствие изменений входа и target leakage, prepare-only без клиента, отказ плохой второй строки до LLM, два разных requirements/бюджета и Reviewer-патч, исходные метрики на отверстиях/компонентах/вертикальном переносе. Живой Linux-запуск реального CoMa sample 1627 фиксируется в validation.md.
 
+### CHECKPOINTS: Согласованные checkpoints и воспроизводимый экспорт
+
+Ревью выявило две воспроизводимые ошибки: полный скрипт мог строить геометрию после commit вместо выбранного snapshot; variables после commit терялись при восстановлении. Worker теперь записывает фактические мутации/аргументы/IDs, код экспорта воспроизводит их, source хранится отдельно.
+
+Влияние: Геометрия и её report неизменны. При точном совпадении итоговой сцены успешной попытки continuation-state связывается с полным успешным состоянием без новой оценки. При другом snapshot или ошибке остаётся ранний checkpoint. Восстановление возвращает и журнал, исключая брошенную ветку. Programmer получает source provenance и точный список variables. Роли/исходный интерпретатор/метрики не меняются; изменён формат code/source_code и добавлен checkpoint.json. Replay — инфраструктура, не повторное исполнение LLM-кода или evaluator.
+
+Проверка: test_checkpoints.py: два дофиксовых контрпримера, uncommitted tail, late variables, commit в цикле, выбор старой ветки с патчем, ошибка после оценки, pure-variable update без лишней оценки, IDs/изменяемые аргументы/math aliases, повреждённый журнал и native Python replay. Полный набор macOS/Linux и одиночный feedback-пилот проверяются отдельно.
+
 ## Зависимости
 
 Исходные requirements.txt (UTF-16):
@@ -796,7 +804,7 @@ LLM: извлечён transport; форма API запроса та же, пар
 ```diff
 --- tool_agent/multi_agents_workflow.py:run_po_coder_agents
 +++ src/text2bim_massing/workflow.py:generate
-@@ -1,92 +1,212 @@
+@@ -1,92 +1,228 @@
 -def run_po_coder_agents(query: str, 
 -                        chat_history_front_end: str, 
 -                        model=MODEL): # model = "gpt" or "gemini" or "mistral" or "claude"
@@ -844,6 +852,7 @@ LLM: извлечён transport; форма API запроса та же, пар
 +    backend = BudgetedLLM(llm, budget, trace)
 +    archive = CandidateArchive(root, evaluator, context, budget, trace)
 +    executor = ProcessExecutor(config, remaining=budget.remaining)
++    executor.on_success = lambda: archive.complete_execution(executor)
  
 -    with open(CODER_PROMPT_PATH, "r", encoding="utf-8") as f:
 -        coder_prompt_str = f.read()
@@ -855,6 +864,8 @@ LLM: извлечён transport; форма API запроса та же, пар
 +                SceneSnapshot(message["snapshot"]),
 +                "\n\n".join([*executor.codes, code]),
 +                message["state"],
++                actions=[*executor.actions, *message["actions"]],
++                attempt=executor.attempts,
 +            )
 +        if event == "evaluate":
 +            return archive.evaluate(message["candidate_id"])
@@ -995,12 +1006,18 @@ LLM: извлечён transport; форма API запроса та же, пар
 +                    candidate
 +                    for candidate in reversed(list(archive.candidates.values()))
 +                    if candidate.snapshot.json == executor.snapshot.json
++                    and candidate.state_json == json.dumps(executor.state, allow_nan=False)
 +                ),
 +                None,
 +            )
 +            if current is None:
 +                candidate_id = archive.commit(
-+                    executor.snapshot, "\n\n".join(executor.codes), executor.state
++                    executor.snapshot,
++                    "\n\n".join(executor.codes),
++                    executor.state,
++                    actions=executor.actions,
++                    attempt=executor.attempts,
++                    boundary="script_complete",
 +                )
 +            else:
 +                candidate_id = current.candidate_id
@@ -1032,12 +1049,17 @@ LLM: извлечён transport; форма API запроса та же, пар
 +            chosen = archive.candidates[decision["candidate_id"]]
 +            executor.snapshot = chosen.snapshot
 +            executor.state = json.loads(chosen.state_json)
-+            executor.codes = [chosen.code]
++            executor.codes = [chosen.source_code]
++            executor.actions = json.loads(chosen.actions_json)
 +            # Source's review patch request is retained, with the selected immutable state made explicit.
 +            programmer_task = (
-+                review_patch_task(chosen.code, decision["guidance"])
++                review_patch_task(chosen.source_code, decision["guidance"])
 +                + "\nSelected scene with stable IDs: "
 +                + chosen.snapshot.json
++                + "\nRestored checkpoint variables: "
++                + json.dumps(list(decode_state(executor.state)))
++                + "\nOnly the listed variables belong to this checkpoint. source_code is provenance "
++                "and may include statements after the checkpoint; do not assume those ran."
 +            )
 +    except BudgetExceeded as error:
 +        status, reason = "budget_exhausted", str(error)
@@ -1095,6 +1117,8 @@ LLM: извлечён transport; форма API запроса та же, пар
 +    if selected:
 +        write_json(root / "selected_massing.json", selected.snapshot.to_massing())
 +        (root / "selected_code.py").write_text(selected.code)
++        (root / "selected_source_code.py").write_text(selected.source_code)
++        write_json(root / "checkpoint.json", selected.checkpoint())
 +    return result
 ```
 

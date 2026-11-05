@@ -120,7 +120,44 @@ def main():
         validate_code(code)
         scene = Scene.from_snapshot(SceneSnapshot(request["snapshot"]))
         state = decode_state(request["state"])
-        tools = MassingTools(scene, units=request["units"]).as_functions()
+        actions, allocated_ids = [], []
+        action_bytes = 0
+        original_allocate = scene._allocate_id
+
+        def allocate():
+            object_id = original_allocate()
+            allocated_ids.append(object_id)
+            return object_id
+
+        scene._allocate_id = allocate
+
+        def record(name, function):
+            def call(*args, **kwargs):
+                nonlocal action_bytes
+                start = len(allocated_ids)
+                revision = scene._revision
+                arguments, keywords = encode_state(args), encode_state(kwargs)
+                result = function(*args, **kwargs)
+                if scene._revision == revision:
+                    return result
+                action = {
+                    "name": name,
+                    "args": arguments,
+                    "kwargs": keywords,
+                    "ids": allocated_ids[start:],
+                }
+                action_bytes += len(json.dumps(action, allow_nan=False).encode())
+                if action_bytes > request["max_state_bytes"]:
+                    raise ValueError("Checkpoint operation journal exceeds size limit")
+                actions.append(action)
+                return result
+
+            return call
+
+        tools = {
+            name: record(name, fn)
+            for name, fn in MassingTools(scene, units=request["units"]).as_functions().items()
+        }
 
         def rpc(action, **values):
             send({"event": action, **values})
@@ -132,7 +169,10 @@ def main():
         tools.update(
             {
                 "commit_candidate": lambda: rpc(
-                    "commit", snapshot=scene.snapshot().json, state=encode_state(state)
+                    "commit",
+                    snapshot=scene.snapshot().json,
+                    state=encode_state(state),
+                    actions=actions,
                 ),
                 "evaluate": lambda candidate_id: rpc("evaluate", candidate_id=candidate_id),
                 "select_candidate": lambda candidate_id: rpc("select", candidate_id=candidate_id),
@@ -179,6 +219,7 @@ def main():
                 "ok": True,
                 "snapshot": snapshot,
                 "state": encoded,
+                "actions": actions,
                 "stdout": output.getvalue(),
             }
         )

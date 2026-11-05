@@ -120,6 +120,13 @@
       "reason": "Отдельный task_mode requirements формирует задачу по каждому sample. Внешние чистые with_canonical_area/BuildingBrief переиспользуются из закреплённого checkout Маслова, без копирования и запуска алгоритма поиска. Новый requirements.json задаёт четыре исходные метрики; prepare-only сохраняет binding до LLM.",
       "method_effect": "Runtime, порядок ролей и исходники Text2BIM не меняются. Одна постройка, сохранение ID, alias usable_area->total_area, явная числовая валидация без скрытых defaults. Нулевые/неизвестные/дробные этажи и неполные цели отклоняются до модели; это ограничение fully-stated subset, а не общий fallback Маслова. Высота и средняя площадь этажа — производные входных данных. Четыре метрики сохраняются раздельно; общей функции score нет. Dataset читается один раз для совпадения SHA и фактического входа. Текущая цель по уточнению пользователя — один массинг; test split и массовая сборка отложены. --sample обозначает единичный вход (--dataset сохранён как алиас).",
       "verification": "test_maslov_runner.py: валидация чисел, исходный alias helper, отсутствие изменений входа и target leakage, prepare-only без клиента, отказ плохой второй строки до LLM, два разных requirements/бюджета и Reviewer-патч, исходные метрики на отверстиях/компонентах/вертикальном переносе. Живой Linux-запуск реального CoMa sample 1627 фиксируется в validation.md."
+    },
+    {
+      "id": "CHECKPOINTS",
+      "title": "Согласованные checkpoints и воспроизводимый экспорт",
+      "reason": "Ревью выявило две воспроизводимые ошибки: полный скрипт мог строить геометрию после commit вместо выбранного snapshot; variables после commit терялись при восстановлении. Worker теперь записывает фактические мутации/аргументы/IDs, код экспорта воспроизводит их, source хранится отдельно.",
+      "method_effect": "Геометрия и её report неизменны. При точном совпадении итоговой сцены успешной попытки continuation-state связывается с полным успешным состоянием без новой оценки. При другом snapshot или ошибке остаётся ранний checkpoint. Восстановление возвращает и журнал, исключая брошенную ветку. Programmer получает source provenance и точный список variables. Роли/исходный интерпретатор/метрики не меняются; изменён формат code/source_code и добавлен checkpoint.json. Replay — инфраструктура, не повторное исполнение LLM-кода или evaluator.",
+      "verification": "test_checkpoints.py: два дофиксовых контрпримера, uncommitted tail, late variables, commit в цикле, выбор старой ветки с патчем, ошибка после оценки, pure-variable update без лишней оценки, IDs/изменяемые аргументы/math aliases, повреждённый журнал и native Python replay. Полный набор macOS/Linux и одиночный feedback-пилот проверяются отдельно."
     }
   ],
   "file_groups": [
@@ -431,6 +438,18 @@
       "reason": "Отдельный конфиг и руководство режима реальных требований. Источники, единицы, валидность, alias, provenance, preview и выбранные метрики описаны явно.",
       "method_effect": "Внешняя конфигурация задания и evaluator; новые критерии не встраиваются в Text2BIM. Полный split/многозданный benchmark не объявляется готовым.",
       "verification": "Числовые и интеграционные тесты; prepare-only реального sample 1627; результаты живого прогона — отдельно в validation.md."
+    },
+    {
+      "change_id": "CHECKPOINTS",
+      "paths": [
+        "src/text2bim_massing/checkpoint.py",
+        "tests/test_checkpoints.py",
+        "docs/checkpoints.md",
+        "examples/checkpoint_feedback_task.json"
+      ],
+      "reason": "Новый replay checkpoint, регрессии по описанию ревью и документация формата/границ фикса. Оригинальный counterexamples.json не был предоставлен.",
+      "method_effect": "Исправление инфраструктуры сохранения/восстановления; source отделён от исполняемого воспроизводимого артефакта, без изменения геометрического evaluator.",
+      "verification": "Регрессионные тесты, точное сравнение geometry/IDs/state и запуск экспортированного code.py; source/hash audit."
     }
   ],
   "source_disposition": {

@@ -14,10 +14,10 @@
 | Роли и исправления | Enhancer, Architect по запросу, Programmer, Reviewer; разделены исправление исполнения и улучшение оценённой формы. | `test_workflow.py`, живые feedback/courtyard задачи. |
 | Исполнение | Отдельный worker, тайм-аут, ограничения кода/вывода/состояния, ограниченный Python, атомарное принятие сцены и переменных. | `test_execution.py`, включая ошибки и тайм-ауты. |
 | Внешний evaluator | JSON-контракт, отдельный процесс, тонкие адаптеры metric/processor и layouts. | `test_adapters.py`, `test_maslov_integration.py`, исходные оценщики. |
-| Кандидаты | Неизменяемые snapshots и отчёты, кэш, выбор только оценённого, восстановление состояния выбранного кандидата для патча. | `test_workflow.py`, выбор предыдущего кандидата и отсутствие stale report. |
+| Кандидаты | Неизменяемые snapshots/reports; согласованный журнал/IDs/state, поздние variables при совпадающей сцене, отдельные replay и source. | `test_workflow.py`, выбор предыдущего кандидата и отсутствие stale report. |
 | API, CLI и бюджеты | Конфигурация, статусы, лимиты LLM/оценок/времени/исправлений, история, расходы и частичные результаты. | `test_workflow.py`, `test_cli_codex.py`, реальные CLI-запуски. |
 | LLM-транспорты | OpenAI Chat Completions SDK 1.82.0; Codex CLI через ChatGPT login. | SDK проверен локальным HTTP transport; живые обращения выполнены через Codex. |
-| Linux и упаковка | Устанавливаемый wheel, sdist с исходниками и аудитом, Dockerfile, CI Python 3.11–3.13. | Сборка, core-only smoke, 116 тестов в Linux, GitHub Actions. |
+| Linux и упаковка | Устанавливаемый wheel, sdist с исходниками и аудитом, Dockerfile, CI Python 3.11–3.13. | Сборка, core-only smoke, 123 теста в Linux, GitHub Actions. |
 | Эксперимент Маслова | Отдельный runner, pin пакета, pilot/requirements режимы, исходная нормализация площади и четыре метрики, подготовка без LLM и provenance каждой цели. | `test_maslov_runner.py`, живые Linux-пилоты 1028279 и requirements 1627. |
 | Полнота учёта | Все 44 исходных файла, 156 объявлений выбранных Python-файлов и все файлы проекта описаны; хеши и diff проверяются CI. | `tools/audit_adaptation.py`, `test_adaptation_audit.py`. |
 
@@ -26,6 +26,14 @@
 
 Проверка полноты перечня и хешей не является доказательством семантической
 эквивалентности всей исходной системе Text2BIM.
+
+## Исправление checkpoints после ревью
+
+Восстановлены два дефекта: весь source после commit мог создавать другую
+геометрию, а variables успешного скрипта терялись при восстановлении. Они
+исправлены и покрыты регрессиями, включая loop/старый кандидат/ошибку после
+оценки и pure-variable update без новой оценки. Описание контракта и нового
+экспорта — в [checkpoints.md](checkpoints.md).
 
 ## Что показали живые проверки
 

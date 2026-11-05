@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ._vendor.text2bim.agents import MyAgent, plan_designer
 from ._vendor.text2bim.utils import clean_code_for_chat_extend
+from ._worker import decode_state
 from .archive import CandidateArchive
 from .config import GenerationTask, RunConfig
 from .execution import ProcessExecutor
@@ -130,6 +131,7 @@ def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> G
     backend = BudgetedLLM(llm, budget, trace)
     archive = CandidateArchive(root, evaluator, context, budget, trace)
     executor = ProcessExecutor(config, remaining=budget.remaining)
+    executor.on_success = lambda: archive.complete_execution(executor)
 
     def handle_event(message, code):
         budget.check()
@@ -139,6 +141,8 @@ def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> G
                 SceneSnapshot(message["snapshot"]),
                 "\n\n".join([*executor.codes, code]),
                 message["state"],
+                actions=[*executor.actions, *message["actions"]],
+                attempt=executor.attempts,
             )
         if event == "evaluate":
             return archive.evaluate(message["candidate_id"])
@@ -201,12 +205,18 @@ def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> G
                     candidate
                     for candidate in reversed(list(archive.candidates.values()))
                     if candidate.snapshot.json == executor.snapshot.json
+                    and candidate.state_json == json.dumps(executor.state, allow_nan=False)
                 ),
                 None,
             )
             if current is None:
                 candidate_id = archive.commit(
-                    executor.snapshot, "\n\n".join(executor.codes), executor.state
+                    executor.snapshot,
+                    "\n\n".join(executor.codes),
+                    executor.state,
+                    actions=executor.actions,
+                    attempt=executor.attempts,
+                    boundary="script_complete",
                 )
             else:
                 candidate_id = current.candidate_id
@@ -238,12 +248,17 @@ def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> G
             chosen = archive.candidates[decision["candidate_id"]]
             executor.snapshot = chosen.snapshot
             executor.state = json.loads(chosen.state_json)
-            executor.codes = [chosen.code]
+            executor.codes = [chosen.source_code]
+            executor.actions = json.loads(chosen.actions_json)
             # Source's review patch request is retained, with the selected immutable state made explicit.
             programmer_task = (
-                review_patch_task(chosen.code, decision["guidance"])
+                review_patch_task(chosen.source_code, decision["guidance"])
                 + "\nSelected scene with stable IDs: "
                 + chosen.snapshot.json
+                + "\nRestored checkpoint variables: "
+                + json.dumps(list(decode_state(executor.state)))
+                + "\nOnly the listed variables belong to this checkpoint. source_code is provenance "
+                "and may include statements after the checkpoint; do not assume those ran."
             )
     except BudgetExceeded as error:
         status, reason = "budget_exhausted", str(error)
@@ -301,4 +316,6 @@ def generate(task, evaluator, llm, config=None, output_dir="runs/text2bim") -> G
     if selected:
         write_json(root / "selected_massing.json", selected.snapshot.to_massing())
         (root / "selected_code.py").write_text(selected.code)
+        (root / "selected_source_code.py").write_text(selected.source_code)
+        write_json(root / "checkpoint.json", selected.checkpoint())
     return result

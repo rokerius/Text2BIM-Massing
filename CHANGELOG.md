@@ -7,6 +7,11 @@
 
 ## 2026-11-05
 
+- Исправлены checkpoints: replay восстанавливает выбранный snapshot и IDs,
+  поздние variables успешного скрипта сохраняются без лишней оценки. Исходный
+  source отделён от code.py/checkpoint.json; добавлены регрессии и пример
+  checkpoint_feedback_task.json. Общие метрики и роли Text2BIM не менялись.
+
 - Добавлен режим реальных requirements одного здания: исходный area-alias helper
   Маслова, числовая валидация, target provenance, prepare-only и конфиг четырёх
   исходных метрик. Нет скрытых defaults или замены целей на два этажа пилота.

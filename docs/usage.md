@@ -192,9 +192,10 @@ finally:
 | `task.json`, `config.json` | Задание/context и эффективные параметры workflow. |
 | `prompts.json`, `provenance.json` | Рабочие промпты, source commits, transport и модель. |
 | `history.jsonl` | Последовательность запросов, ответов, ошибок, оценок и выбора. |
-| `candidates/<id>/` | Snapshot, massing, состояние, код, report; ошибки evaluator сохраняются отдельно. |
+| `candidates/<id>/` | Snapshot, massing, state, checkpoint.json, replay code.py, source_code.py и report; ошибки evaluator сохраняются отдельно. |
 | `scene.json` | Последняя принятая сцена исполнителя. Может отличаться от выбранного старого кандидата. |
-| `selected_massing.json`, `selected_code.py` | Геометрия и код выбранного оценённого кандидата; появляются только при выборе. |
+| `selected_massing.json`, `selected_code.py`, `checkpoint.json` | Геометрия и исполняемый комплект воспроизведения выбранного кандидата; появляются только при выборе. |
+| `selected_source_code.py` | Исходные попытки Programmer, отдельно от replay: могут содержать хвост после checkpoint. |
 | `runner_config.json` | Дополнительный файл CLI с исходной конфигурацией. |
 
 Статусы workflow: `completed`, `budget_exhausted`, `execution_failed`,

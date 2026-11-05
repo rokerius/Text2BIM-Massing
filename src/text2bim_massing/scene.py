@@ -78,10 +78,13 @@ class Scene:
         return list(dict.fromkeys(ids))
 
     def _add(self, kind: str, data: dict) -> str:
-        object_id = uuid4().hex
+        object_id = self._allocate_id()
         self._objects[object_id] = {"id": object_id, "kind": kind, **deepcopy(data)}
         self._revision += 1
         return object_id
+
+    def _allocate_id(self):
+        return uuid4().hex
 
     def create_polygon(self, polygons) -> str:
         return self._add("polygon", {"polygons": normalize_polygons(polygons)})

@@ -32,7 +32,7 @@ def kill_process(process):
 
 
 class ProcessExecutor:
-    def __init__(self, config: RunConfig, *, event_handler=None, remaining=None):
+    def __init__(self, config: RunConfig, *, event_handler=None, remaining=None, on_success=None):
         self.config = config
         self.snapshot = Scene().snapshot()
         self.state = encode_state({})
@@ -40,6 +40,8 @@ class ProcessExecutor:
         self.remaining = remaining or (lambda: float("inf"))
         self.attempts = 0
         self.codes: list[str] = []
+        self.actions: list[dict] = []
+        self.on_success = on_success
 
     def execute(self, code: str) -> ExecutionResult:
         self.attempts += 1
@@ -93,7 +95,7 @@ class ProcessExecutor:
                         buffer += chunk
                         if (
                             len(buffer)
-                            > self.config.max_state_bytes * 3 + self.config.max_output_bytes
+                            > self.config.max_state_bytes * 4 + self.config.max_output_bytes
                         ):
                             return ExecutionResult(False, "Worker response exceeds size limit")
                         while b"\n" in buffer:
@@ -109,7 +111,10 @@ class ProcessExecutor:
                                     SceneSnapshot(message["snapshot"])
                                 ).snapshot()
                                 self.snapshot, self.state = snapshot, message["state"]
+                                self.actions.extend(message["actions"])
                                 self.codes.append(code)
+                                if self.on_success is not None:
+                                    self.on_success()
                                 return ExecutionResult(True, stdout=message["stdout"])
                             started = time.monotonic()
                             try:

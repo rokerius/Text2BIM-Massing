@@ -106,3 +106,12 @@ Runner импортирует закреплённый пакет и сущес�
 не меняется. Новый requirements.json подключает исходные FloorCountError,
 UsableAreaError, SiteMatch и IdIoU с фактическими требованиями каждого sample.
 Схема, отказ unknown values и provenance описаны в requirements.md интеграции.
+
+
+Исправление checkpoints: новый checkpoint.py воспроизводит записанные мутации
+MassingTools с оригинальными IDs; source_code.py хранит текст Programmer
+отдельно. _worker/execution собирают журнал, archive завершает variables
+успешного скрипта только при точном совпадении snapshot, workflow восстанавливает
+журнал вместе со сценой/state и перечисляет доступные variables в patch context.
+Добавлен Scene._allocate_id как внутренний hook replay, обычный UUID не меняется.
+Исходный AST-интерпретатор и vendor agents не правились, роли и метрики прежние.
