@@ -97,3 +97,12 @@ Runner импортирует закреплённый пакет и сущес�
 `SiteMatch`; ядро пакета и метод Маслова для этого не меняются. Context содержит
 только `id`, `site_contour`, `requirements`. Реестр описывает ограничения
 пилота с одним зданием и явные цели конфига; это не полная benchmark-интеграция.
+
+
+`integrations/maslov/run.py` теперь поддерживает task_mode requirements.
+`with_canonical_area` и `BuildingBrief` импортируются из исходного
+`subtractive_additive_massing/brief.py` исключительно для нормализации данных
+и производных целей; алгоритмы поиска/разбиения не вызываются. Runtime Text2BIM
+не меняется. Новый requirements.json подключает исходные FloorCountError,
+UsableAreaError, SiteMatch и IdIoU с фактическими требованиями каждого sample.
+Схема, отказ unknown values и provenance описаны в requirements.md интеграции.

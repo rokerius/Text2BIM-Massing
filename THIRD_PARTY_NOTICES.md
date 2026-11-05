@@ -12,6 +12,10 @@
   commit `607ff1fcf80477787409522d93e18e42ac1436cf`. Their original files and
   hashes are retained in `upstream/maslov/`. Those files and the root of that
   source commit contain no license notice; no additional license is inferred.
+  The separate experiment runner also imports `BuildingBrief` and
+  `with_canonical_area` from that checkout's `subtractive_additive_massing/brief.py`
+  for input normalization and derived requirements. These helpers remain external;
+  their source is not copied into this package and no search algorithm is invoked.
 
 The complete source mapping and changes are in `docs/source-map.md` and
 `docs/text2bim-adaptation.md`.

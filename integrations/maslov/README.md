@@ -1,6 +1,6 @@
-# Отдельный пилот Маслова
+# Отдельные эксперименты Маслова
 
-Тонкий runner вокруг `generate`: исходные оценщики, независимые задачи,
+Тонкий runner вокруг `generate`: режимы `pilot` и `requirements`, исходные оценщики, независимые задачи,
 закреплённая версия пакета и output в формате `pred_massing`.
 Поддерживается одно требуемое здание на sample. Общий launcher Маслова,
 параметризация и NSGA-II не меняются.
@@ -19,7 +19,7 @@
 исходный mesh-компилятор дал замкнутую mesh 3360 м³. Первая попытка была
 неудачной; обе описаны в [отчёте standalone-проекта](https://github.com/rokerius/Text2BIM-Massing/blob/main/docs/validation.md).
 
-Эти три файла скопированы в локальный
+Runner, оба конфига и README скопированы в локальный
 `massing-generation/experiments/methods/text2bim_adapted/`. Commit/PR в целевую
 ветку Маслова ещё не зафиксирован. Каноническая версионируемая копия находится
 в `integrations/maslov/` этого репозитория.
@@ -54,17 +54,17 @@ python -m pip install --force-reinstall --no-deps \
 ```bash
 /tmp/text2bim-pilot-env/bin/python integrations/maslov/run.py \
   --maslov-repo /absolute/path/to/massing-generation \
-  --dataset /absolute/path/to/massing-generation/experiments/workspace/parametrization/zero_shot/validation/initial_samples/1028279.json \
+  --sample /absolute/path/to/massing-generation/experiments/workspace/parametrization/zero_shot/validation/initial_samples/1028279.json \
   --output /tmp/text2bim-site-1028279-01
 ```
 
-Либо скопировать `run.py`, `pilot.json`, `README.md` без правок в отдельную
+Либо скопировать `run.py`, `pilot.json`, `requirements.json`, `README.md` без правок в отдельную
 папку эксперимента и запускать из checkout Маслова:
 
 ```bash
 /tmp/text2bim-pilot-env/bin/python experiments/methods/text2bim_adapted/run.py \
   --maslov-repo "$PWD" \
-  --dataset experiments/workspace/parametrization/zero_shot/validation/initial_samples/1028279.json \
+  --sample experiments/workspace/parametrization/zero_shot/validation/initial_samples/1028279.json \
   --output /tmp/text2bim-site-1028279-01
 ```
 
@@ -100,8 +100,9 @@ python -m pip install --force-reinstall --no-deps \
 ## Граница пилота
 
 Два этажа и 3 м на этаж — явные диагностические цели конфига. Для настоящих
-requirements нужен другой конфиг с соответствующей инструкцией и оценкой;
-автоматический адаптер схемы требований пока не реализован. Несколько зданий
+requirements добавлены `requirements.json` и адаптер полных числовых требований.
+[Схема, provenance и prepare-only](https://github.com/rokerius/Text2BIM-Massing/blob/main/integrations/maslov/requirements.md)
+описаны отдельно; неизвестные значения не подменяются целями пилота. Несколько зданий
 отклоняются, их IDs не теряются молча.
 
 FloorCount/SiteMatch не заменяют полный benchmark с общими девятью метриками.

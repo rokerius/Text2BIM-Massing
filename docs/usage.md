@@ -221,3 +221,15 @@ finally:
 
 Отдельный эксперимент с фиксированной моделью, реальным контуром и двумя
 исходными метриками описан в [integrations/maslov](../integrations/maslov/README.md).
+
+
+## Требования из датасета во внешнем runner
+
+`integrations/maslov/requirements.json` включает task_mode requirements.
+Для каждого sample используются его n_floors, floor_height и total_area
+(алиас usable_area приводится исходным helper Маслова). Неизвестные/нулевые
+числа отклоняются; цели пилота не подставляются. `--prepare-only` проверяет
+все rows, сохраняет task_bindings/provenance и не создаёт LLM-клиент.
+Во время генерации binding сохраняется также в каждой задаче.
+Схема и команды — в [руководстве requirements](../integrations/maslov/requirements.md).
+Это режим runner, не новая команда CLI пакета.

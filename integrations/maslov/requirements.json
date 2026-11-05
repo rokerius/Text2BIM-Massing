@@ -1,0 +1,68 @@
+{
+  "package_commit": "3cbfead4c1b6d538138f36d0a602d79a57c50a3b",
+  "task_mode": "requirements",
+  "experiment": "text2bim_adapted_single_building_requirements_v1",
+  "instruction": "Generate the single building described by this sample's requirements entirely inside site_contour. Preserve its id and functional context. n_floors is the requested floor count, floor_height is in metres, and total_area is the sum of floor-slice areas in square metres, not footprint area or volume. Building height is n_floors * floor_height. Mean floor area is total_area / n_floors; stepped extrusions are allowed. Site coordinates are in METRES; tool coordinates and elevations are in MILLIMETRES. Use the actual reports: floor_count_error and usable_area_error are relative errors to minimize toward zero (allow numerical precision), site_match should be 1 and id_iou should be 1. These targets come from this sample; do not replace them with example or pilot values. Relay the full site contour, units, all requirements and resolved targets in Enhancer's answer: Programmer receives only that answer. Commit, evaluate and select an assessed candidate; request a separate patch when reports show a mismatch. Do not invent a combined score. Every task starts from an empty scene. Programmer must return a complete script that builds a nonempty massing and commits/evaluates it in that reply; a script that only reads or prints the scene is not a generated candidate. Functional records are context for the building envelope: retain them in the task context, but do not represent rooms, dwelling counts or seating as extra solids.",
+  "llm": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "low",
+    "timeout": 120
+  },
+  "evaluators": [
+    {
+      "kind": "metric",
+      "factory": "src.sample_metric.floor_count_error:FloorCountError",
+      "kwargs": {
+        "output_col": "pred_massing",
+        "floor_height_key": "floor_height"
+      },
+      "report_key": "floor_count_error",
+      "layout": "buildings",
+      "building_key": "pred_massing"
+    },
+    {
+      "kind": "metric",
+      "factory": "src.sample_metric.usable_area_error:UsableAreaError",
+      "kwargs": {
+        "output_col": "pred_massing",
+        "floor_height_key": "floor_height",
+        "area_key": "total_area"
+      },
+      "report_key": "usable_area_error",
+      "layout": "buildings",
+      "building_key": "pred_massing"
+    },
+    {
+      "kind": "metric",
+      "factory": "src.sample_metric.site_match:SiteMatch",
+      "kwargs": {
+        "pred_col": "pred_massing",
+        "pred_type": "polygon"
+      },
+      "report_key": "site_match",
+      "layout": "buildings",
+      "building_key": "pred_massing"
+    },
+    {
+      "kind": "metric",
+      "factory": "src.sample_metric.id_iou:IdIoU",
+      "kwargs": {
+        "output_col": "pred_massing"
+      },
+      "report_key": "id_iou",
+      "layout": "buildings",
+      "building_key": "pred_massing"
+    }
+  ],
+  "run": {
+    "max_iterations": 3,
+    "max_llm_calls": 8,
+    "max_evaluations": 4,
+    "max_seconds": 480,
+    "execution_timeout": 10,
+    "evaluation_timeout": 15,
+    "max_repairs": 1,
+    "tool_units": "mm"
+  }
+}

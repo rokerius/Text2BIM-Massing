@@ -10,7 +10,7 @@
 | Узнать оставшуюся работу и критерии готовности | [План реализации](../Text2BIM-Massing-implementation-plan.md) |
 | Установить пакет, запустить CLI или использовать API | [Запуск и API](usage.md) |
 | Разобраться в ролях, процессах и состоянии | [Архитектура](architecture.md) |
-| Повторить отдельный пилот на checkout Маслова | [Runner/config](../integrations/maslov/README.md) |
+| Повторить пилот или запуск по реальным требованиям | [Runner/config](../integrations/maslov/README.md), [requirements](../integrations/maslov/requirements.md) |
 | Проверить фактические результаты, версии и расходы | [Отчёт валидации](validation.md) |
 | Найти происхождение перенесённого кода | [Карта переноса](source-map.md) |
 | Посмотреть точные diff и осознанные изменения метода | [Реестр отличий](text2bim-diff.md) |
