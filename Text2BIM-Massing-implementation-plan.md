@@ -60,7 +60,7 @@ Vectorworks/Solibri заменяются геометрией массингов
 | --- | --- |
 | [Text2BIM](https://github.com/dcy0577/Text2BIM/tree/b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc) | `b71b83d0d6640e7dfe7af3fda17b40fb3cfd70dc`: интерпретатор, agents, workflow, utils и четыре промпта. |
 | [massing-generation](https://github.com/evgmaslov/massing-generation/tree/607ff1fcf80477787409522d93e18e42ac1436cf) | `607ff1fcf80477787409522d93e18e42ac1436cf`, проверенная ветка `exp-external`: формат, конвертеры и внешние компоненты. |
-| Текущий runtime standalone-runner | `62162651ce3bdd2d7ed0a9373ef6a392c4642a36`: исправленные checkpoints. Исторические пилоты до фикса использовали `3cbfead4c1b6d538138f36d0a602d79a57c50a3b`. |
+| Текущий runtime standalone-runner | `49a047cc2751ba16122e3d8a2084b3d416e7311b`: checkpoints с атомарным журналом (P2). Исторические пилоты до фикса использовали `3cbfead4c1b6d538138f36d0a602d79a57c50a3b`. |
 | Конфиг живого пилота | `gpt-6.1-sol`, reasoning `low`, Codex CLI 0.164.0; метрики FloorCount и SiteMatch, бюджеты в `integrations/maslov/pilot.json`. |
 
 Исходная статья: [Text2BIM](https://arxiv.org/abs/2408.08054).
